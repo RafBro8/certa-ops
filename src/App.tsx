@@ -7,6 +7,7 @@ type LeadSource = 'Website' | 'Phone' | 'Referral' | 'Repeat client';
 type Lead = {
   age: string;
   area: string;
+  address: string;
   contact: string;
   customer: string;
   due: string;
@@ -17,6 +18,8 @@ type Lead = {
   source: LeadSource;
   status: LeadStatus;
   value: number;
+  requestedDate: string;
+  requestSummary: string;
 };
 
 type Activity = {
@@ -31,13 +34,14 @@ const pipelineStatuses: LeadStatus[] = ['New lead', 'Needs quote', 'Scheduled', 
 const priorityOptions: PriorityFilter[] = ['All', 'High', 'Medium', 'Low'];
 const sourceOptions: SourceFilter[] = ['All', 'Website', 'Phone', 'Referral', 'Repeat client'];
 
-const leads: Lead[] = [
+const initialLeads: Lead[] = [
   {
     id: 1084,
     customer: 'Mason R.',
     contact: '(708) 555-0184',
     service: 'Garage door spring replacement',
     area: 'Mokena',
+    address: '193rd St near Wolf Road',
     status: 'New lead',
     priority: 'High',
     source: 'Website',
@@ -45,6 +49,9 @@ const leads: Lead[] = [
     nextAction: 'Confirm door size and emergency timing.',
     age: '12 min old',
     value: 425,
+    requestedDate: 'Today',
+    requestSummary:
+      'Customer says the garage door will not lift and one spring appears broken. Needs same-day availability if possible.',
   },
   {
     id: 1085,
@@ -52,6 +59,7 @@ const leads: Lead[] = [
     contact: 'ops@oakhill.example',
     service: 'HVAC service request',
     area: 'New Lenox',
+    address: 'Lincoln Hwy office suite',
     status: 'Needs quote',
     priority: 'Medium',
     source: 'Phone',
@@ -59,6 +67,9 @@ const leads: Lead[] = [
     nextAction: 'Send service quote before close of business.',
     age: '1 hr old',
     value: 1800,
+    requestedDate: 'Today',
+    requestSummary:
+      'Office manager requested a quote for an intermittent rooftop unit issue before next week of patient appointments.',
   },
   {
     id: 1086,
@@ -66,6 +77,7 @@ const leads: Lead[] = [
     contact: '(815) 555-0116',
     service: 'Deck repair walkthrough',
     area: 'Frankfort',
+    address: 'Old Plank Trail neighborhood',
     status: 'Scheduled',
     priority: 'Low',
     source: 'Referral',
@@ -73,6 +85,9 @@ const leads: Lead[] = [
     nextAction: 'Bring railing samples and repair checklist.',
     age: 'Yesterday',
     value: 3200,
+    requestedDate: 'Yesterday',
+    requestSummary:
+      'Homeowner wants loose railing sections, stair movement, and board rot reviewed before hosting family in three weeks.',
   },
   {
     id: 1087,
@@ -80,6 +95,7 @@ const leads: Lead[] = [
     contact: 'Miguel, facility manager',
     service: 'Monthly lot lighting check',
     area: 'Tinley Park',
+    address: 'La Grange Road frontage',
     status: 'Follow-up',
     priority: 'Medium',
     source: 'Repeat client',
@@ -87,6 +103,9 @@ const leads: Lead[] = [
     nextAction: 'Send review request and maintenance renewal note.',
     age: '2 days old',
     value: 650,
+    requestedDate: 'This week',
+    requestSummary:
+      'Recurring client completed a lighting check. Follow-up is ready for review request and renewal conversation.',
   },
   {
     id: 1088,
@@ -94,6 +113,7 @@ const leads: Lead[] = [
     contact: '(708) 555-0198',
     service: 'Basement water mitigation',
     area: 'Orland Park',
+    address: '143rd Street corridor',
     status: 'Needs quote',
     priority: 'High',
     source: 'Website',
@@ -101,6 +121,9 @@ const leads: Lead[] = [
     nextAction: 'Add photos to quote and confirm start window.',
     age: '3 hr old',
     value: 4900,
+    requestedDate: 'Today',
+    requestSummary:
+      'Homeowner reported water entry after storms and uploaded photos. Needs quote range and earliest assessment window.',
   },
   {
     id: 1089,
@@ -108,6 +131,7 @@ const leads: Lead[] = [
     contact: 'frontdesk@cornerstone.example',
     service: 'After-hours electrical inspection',
     area: 'Homer Glen',
+    address: 'Bell Road retail strip',
     status: 'New lead',
     priority: 'Medium',
     source: 'Referral',
@@ -115,6 +139,9 @@ const leads: Lead[] = [
     nextAction: 'Check preferred after-hours access time.',
     age: '38 min old',
     value: 900,
+    requestedDate: 'Today',
+    requestSummary:
+      'Salon wants inspection after flickering lights near styling stations. Work must happen outside client hours.',
   },
   {
     id: 1090,
@@ -122,6 +149,7 @@ const leads: Lead[] = [
     contact: '(708) 555-0172',
     service: 'Driveway pressure wash and seal',
     area: 'Mokena',
+    address: 'La Porte Road subdivision',
     status: 'Scheduled',
     priority: 'Medium',
     source: 'Website',
@@ -129,6 +157,9 @@ const leads: Lead[] = [
     nextAction: 'Confirm weather window and crew arrival.',
     age: '2 days old',
     value: 780,
+    requestedDate: 'Monday',
+    requestSummary:
+      'Customer approved driveway cleaning and sealing. Needs weather confirmation before crew dispatch.',
   },
   {
     id: 1091,
@@ -136,6 +167,7 @@ const leads: Lead[] = [
     contact: 'board@linden.example',
     service: 'Landscape lighting quote',
     area: 'Frankfort',
+    address: 'Linden Commons entrance',
     status: 'Follow-up',
     priority: 'High',
     source: 'Phone',
@@ -143,8 +175,45 @@ const leads: Lead[] = [
     nextAction: 'Call board contact about approved fixture count.',
     age: '4 days old',
     value: 6200,
+    requestedDate: 'Last week',
+    requestSummary:
+      'HOA board has fixture count questions before approving the landscape lighting package.',
   },
 ];
+
+const initialLeadActivities: Record<number, Activity[]> = {
+  1084: [
+    { time: '8:12 AM', detail: 'Website request received and marked high priority.' },
+    { time: '8:16 AM', detail: 'Auto-response sent with expected callback window.' },
+  ],
+  1085: [
+    { time: '9:05 AM', detail: 'Quote reminder created for Oak Hill Dental.' },
+    { time: '9:18 AM', detail: 'Service manager tagged as quote owner.' },
+  ],
+  1086: [
+    { time: 'Yesterday', detail: 'Walkthrough scheduled for Thursday at 2:00 PM.' },
+    { time: '10:20 AM', detail: 'Deck repair checklist added to the job notes.' },
+  ],
+  1087: [
+    { time: '2 days ago', detail: 'Monthly lighting check marked complete.' },
+    { time: '11:00 AM', detail: 'Review request queued for completed lighting check.' },
+  ],
+  1088: [
+    { time: '9:44 AM', detail: 'Storm damage request received with photo note.' },
+    { time: '10:02 AM', detail: 'Quote scope marked pending.' },
+  ],
+  1089: [
+    { time: '10:38 AM', detail: 'Referral source recorded from previous salon project.' },
+  ],
+  1090: [
+    { time: 'Monday', detail: 'Driveway seal job scheduled.' },
+    { time: 'Today', detail: 'Weather confirmation still needed.' },
+  ],
+  1091: [
+    { time: 'Last week', detail: 'HOA quote sent to board contact.' },
+    { time: 'Today', detail: 'Follow-up due before 3:00 PM.' },
+  ],
+};
 
 const activities: Activity[] = [
   { time: '8:12 AM', detail: 'New website request from Mokena marked high priority.' },
@@ -219,9 +288,9 @@ function Header() {
 
 function Hero() {
   const heroMetrics = [
-    [String(leads.length), 'open opportunities'],
-    [formatCurrency(sumLeadValue(leads)), 'estimated pipeline'],
-    [String(leads.filter((lead) => lead.status === 'Follow-up').length), 'follow-ups due'],
+    [String(initialLeads.length), 'open opportunities'],
+    [formatCurrency(sumLeadValue(initialLeads)), 'estimated pipeline'],
+    [String(initialLeads.filter((lead) => lead.status === 'Follow-up').length), 'follow-ups due'],
     ['91%', 'response target'],
   ];
 
@@ -264,13 +333,17 @@ function Hero() {
 }
 
 function DashboardPreview() {
+  const [leadItems, setLeadItems] = useState<Lead[]>(initialLeads);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('All');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('All');
+  const [selectedLeadId, setSelectedLeadId] = useState(initialLeads[0].id);
+  const [leadActivities, setLeadActivities] = useState(initialLeadActivities);
+  const [noteDraft, setNoteDraft] = useState('');
 
   const filteredLeads = useMemo(
     () =>
-      leads.filter((lead) => {
+      leadItems.filter((lead) => {
         const searchTarget = `${lead.customer} ${lead.service} ${lead.area} ${lead.contact}`.toLowerCase();
         const matchesSearch = searchTarget.includes(searchTerm.trim().toLowerCase());
         const matchesPriority = priorityFilter === 'All' || lead.priority === priorityFilter;
@@ -278,8 +351,11 @@ function DashboardPreview() {
 
         return matchesSearch && matchesPriority && matchesSource;
       }),
-    [priorityFilter, searchTerm, sourceFilter],
+    [leadItems, priorityFilter, searchTerm, sourceFilter],
   );
+
+  const selectedLead =
+    leadItems.find((lead) => lead.id === selectedLeadId) || filteredLeads[0] || leadItems[0];
 
   const dashboardMetrics = [
     { label: 'Visible leads', value: String(filteredLeads.length), tone: 'cert' },
@@ -296,6 +372,45 @@ function DashboardPreview() {
     },
   ];
 
+  function handleStatusChange(leadId: number, status: LeadStatus) {
+    setLeadItems((current) =>
+      current.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              status,
+              nextAction: getNextActionForStatus(status),
+            }
+          : lead,
+      ),
+    );
+    setLeadActivities((current) => ({
+      ...current,
+      [leadId]: [
+        { time: 'Now', detail: `Status moved to ${status}.` },
+        ...(current[leadId] || []),
+      ],
+    }));
+    setSelectedLeadId(leadId);
+  }
+
+  function handleAddNote() {
+    const trimmedNote = noteDraft.trim();
+
+    if (!trimmedNote) {
+      return;
+    }
+
+    setLeadActivities((current) => ({
+      ...current,
+      [selectedLead.id]: [
+        { time: 'Now', detail: trimmedNote },
+        ...(current[selectedLead.id] || []),
+      ],
+    }));
+    setNoteDraft('');
+  }
+
   return (
     <section className="py-16" id="dashboard">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -309,8 +424,8 @@ function DashboardPreview() {
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-slate/70">
-            Stage 2 turns the static shell into a working dashboard view with filters,
-            search, richer cards, and the metrics a service owner would check every morning.
+            Stage 3 makes each lead actionable with a detail workspace, status movement,
+            activity notes, and the customer context a service owner needs before calling back.
           </p>
         </div>
 
@@ -349,11 +464,22 @@ function DashboardPreview() {
                 <PipelineColumn
                   key={status}
                   leads={filteredLeads.filter((lead) => lead.status === status)}
+                  onLeadSelect={setSelectedLeadId}
+                  selectedLeadId={selectedLead.id}
                   status={status}
                 />
               ))}
             </div>
           </section>
+
+          <LeadDetailPanel
+            activities={leadActivities[selectedLead.id] || []}
+            lead={selectedLead}
+            noteDraft={noteDraft}
+            onAddNote={handleAddNote}
+            onNoteChange={setNoteDraft}
+            onStatusChange={handleStatusChange}
+          />
         </div>
       </div>
     </section>
@@ -481,7 +607,17 @@ function MetricTile({ metric }: { metric: { label: string; tone: string; value: 
   );
 }
 
-function PipelineColumn({ leads: columnLeads, status }: { leads: Lead[]; status: LeadStatus }) {
+function PipelineColumn({
+  leads: columnLeads,
+  onLeadSelect,
+  selectedLeadId,
+  status,
+}: {
+  leads: Lead[];
+  onLeadSelect: (leadId: number) => void;
+  selectedLeadId: number;
+  status: LeadStatus;
+}) {
   const statusValue = sumLeadValue(columnLeads);
 
   return (
@@ -500,7 +636,14 @@ function PipelineColumn({ leads: columnLeads, status }: { leads: Lead[]; status:
 
       <div className="grid gap-3">
         {columnLeads.length > 0 ? (
-          columnLeads.map((lead) => <LeadCard lead={lead} key={lead.id} />)
+          columnLeads.map((lead) => (
+            <LeadCard
+              active={lead.id === selectedLeadId}
+              lead={lead}
+              key={lead.id}
+              onSelect={onLeadSelect}
+            />
+          ))
         ) : (
           <EmptyColumn status={status} />
         )}
@@ -509,7 +652,15 @@ function PipelineColumn({ leads: columnLeads, status }: { leads: Lead[]; status:
   );
 }
 
-function LeadCard({ lead }: { lead: Lead }) {
+function LeadCard({
+  active,
+  lead,
+  onSelect,
+}: {
+  active: boolean;
+  lead: Lead;
+  onSelect: (leadId: number) => void;
+}) {
   const priorityClass = {
     High: 'bg-coral/20 text-coral',
     Medium: 'bg-amber/20 text-amber',
@@ -524,7 +675,14 @@ function LeadCard({ lead }: { lead: Lead }) {
   }[lead.source];
 
   return (
-    <button className="group border border-white/10 bg-white/[0.06] p-4 text-left transition hover:border-signal/50 hover:bg-white/10" type="button">
+    <button
+      aria-pressed={active}
+      className={`group border p-4 text-left transition hover:border-signal/50 hover:bg-white/10 ${
+        active ? 'border-signal bg-white/10' : 'border-white/10 bg-white/[0.06]'
+      }`}
+      onClick={() => onSelect(lead.id)}
+      type="button"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold text-white/50">#{lead.id}</p>
@@ -549,6 +707,148 @@ function LeadCard({ lead }: { lead: Lead }) {
         <p className="font-display text-lg font-bold text-white">{formatCurrency(lead.value)}</p>
       </div>
     </button>
+  );
+}
+
+function LeadDetailPanel({
+  activities: leadActivity,
+  lead,
+  noteDraft,
+  onAddNote,
+  onNoteChange,
+  onStatusChange,
+}: {
+  activities: Activity[];
+  lead: Lead;
+  noteDraft: string;
+  onAddNote: () => void;
+  onNoteChange: (value: string) => void;
+  onStatusChange: (leadId: number, status: LeadStatus) => void;
+}) {
+  return (
+    <section className="overflow-hidden border border-slate/10 bg-white shadow-panel lg:col-span-2">
+      <div className="bg-night p-6 text-white">
+        <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-signal">
+              Lead detail
+            </p>
+            <h3 className="mt-3 font-display text-4xl font-bold leading-tight">{lead.customer}</h3>
+            <p className="mt-2 text-sm font-semibold text-white/60">
+              #{lead.id} / {lead.source} / {lead.requestedDate}
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:min-w-72">
+            <div className="border border-white/10 bg-white/[0.06] p-4">
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
+                Current status
+              </p>
+              <p className="mt-2 text-lg font-bold text-white">{lead.status}</p>
+            </div>
+            <div className="border border-white/10 bg-white/[0.06] p-4">
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
+                Est. value
+              </p>
+              <p className="mt-2 font-display text-2xl font-bold text-signal">
+                {formatCurrency(lead.value)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 p-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div>
+          <div className="grid gap-px overflow-hidden border border-slate/10 bg-slate/10 sm:grid-cols-2 xl:grid-cols-4">
+            <DetailItem label="Contact" value={lead.contact} />
+            <DetailItem label="Area" value={lead.area} />
+            <DetailItem label="Address" value={lead.address} />
+            <DetailItem label="Due" value={lead.due} />
+          </div>
+
+          <div className="mt-6 border border-mist bg-cloud p-5">
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-steel">
+              Requested service
+            </p>
+            <h4 className="mt-3 font-display text-3xl font-bold leading-tight text-night">
+              {lead.service}
+            </h4>
+            <p className="mt-3 text-sm leading-6 text-slate/70">{lead.requestSummary}</p>
+            <p className="mt-4 border-t border-slate/10 pt-4 text-sm font-bold text-slate">
+              Next action: {lead.nextAction}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-5">
+          <div className="border border-mist bg-cloud p-5">
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-cert">
+              Move status
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {pipelineStatuses.map((status) => (
+                <button
+                  className={`min-h-14 border px-4 py-3 text-left text-sm font-extrabold transition ${
+                    lead.status === status
+                      ? 'border-cert bg-cert text-white'
+                      : 'border-slate/10 bg-white text-slate hover:border-cert hover:text-cert'
+                  }`}
+                  key={status}
+                  onClick={() => onStatusChange(lead.id, status)}
+                  type="button"
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-mist bg-cloud p-5">
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-cert">
+              Add note
+            </p>
+            <textarea
+              className="mt-4 min-h-24 w-full border border-slate/10 bg-white px-3 py-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+              onChange={(event) => onNoteChange(event.target.value)}
+              placeholder="Log a call, quote update, scheduling note..."
+              value={noteDraft}
+            />
+            <button
+              className="mt-3 w-full bg-night px-5 py-3 text-sm font-extrabold text-white transition hover:bg-cert sm:w-auto"
+              onClick={onAddNote}
+              type="button"
+            >
+              Add activity note
+            </button>
+          </div>
+
+          <div className="border border-mist bg-cloud p-5">
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-cert">
+              Activity timeline
+            </p>
+            <div className="mt-4 grid gap-3">
+              {leadActivity.map((activity) => (
+                <div className="border-l-4 border-signal bg-white p-4" key={`${activity.time}-${activity.detail}`}>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-steel">
+                    {activity.time}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate">{activity.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 bg-white p-4">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-steel">{label}</p>
+      <p className="mt-2 break-words text-sm font-bold leading-6 text-night">{value}</p>
+    </div>
   );
 }
 
@@ -626,7 +926,7 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Stage 2 pipeline dashboard.</p>
+        <p>Portfolio demo concept. Stage 3 lead workflow.</p>
       </div>
     </footer>
   );
@@ -642,6 +942,17 @@ function formatCurrency(value: number) {
 
 function sumLeadValue(items: Lead[]) {
   return items.reduce((total, lead) => total + lead.value, 0);
+}
+
+function getNextActionForStatus(status: LeadStatus) {
+  const nextActionByStatus: Record<LeadStatus, string> = {
+    'New lead': 'Call the customer and confirm request details.',
+    'Needs quote': 'Prepare scope, price range, and send the quote.',
+    Scheduled: 'Confirm schedule, access notes, and crew readiness.',
+    'Follow-up': 'Send follow-up, review request, or closeout note.',
+  };
+
+  return nextActionByStatus[status];
 }
 
 export default App;

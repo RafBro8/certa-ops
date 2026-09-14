@@ -41,6 +41,8 @@ Build:
 - Notes and activity timeline.
 - Customer/contact information.
 - Requested service details.
+- Frontend-only note entry.
+- Selected lead state.
 
 Commit checkpoint:
 - `feat: add lead workflow`
