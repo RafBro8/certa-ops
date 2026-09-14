@@ -57,6 +57,8 @@ Build:
 - Job schedule view.
 - Upcoming jobs.
 - Convert lead to scheduled job interaction.
+- Frontend-only quote updates on the selected lead.
+- Schedule summary metrics for approved work and pending quotes.
 
 Commit checkpoint:
 - `feat: add quote and scheduling workflow`

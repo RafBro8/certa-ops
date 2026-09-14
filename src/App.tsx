@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 type LeadStatus = 'New lead' | 'Needs quote' | 'Scheduled' | 'Follow-up';
 type LeadPriority = 'High' | 'Medium' | 'Low';
 type LeadSource = 'Website' | 'Phone' | 'Referral' | 'Repeat client';
+type QuoteStatus = 'Not started' | 'Draft' | 'Sent' | 'Approved';
 
 type Lead = {
   age: string;
@@ -14,6 +15,8 @@ type Lead = {
   id: number;
   nextAction: string;
   priority: LeadPriority;
+  quoteStatus: QuoteStatus;
+  scheduleWindow: string;
   service: string;
   source: LeadSource;
   status: LeadStatus;
@@ -33,6 +36,7 @@ type SourceFilter = 'All' | LeadSource;
 const pipelineStatuses: LeadStatus[] = ['New lead', 'Needs quote', 'Scheduled', 'Follow-up'];
 const priorityOptions: PriorityFilter[] = ['All', 'High', 'Medium', 'Low'];
 const sourceOptions: SourceFilter[] = ['All', 'Website', 'Phone', 'Referral', 'Repeat client'];
+const quoteStatuses: QuoteStatus[] = ['Not started', 'Draft', 'Sent', 'Approved'];
 
 const initialLeads: Lead[] = [
   {
@@ -49,6 +53,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Confirm door size and emergency timing.',
     age: '12 min old',
     value: 425,
+    quoteStatus: 'Not started',
+    scheduleWindow: 'Unscheduled',
     requestedDate: 'Today',
     requestSummary:
       'Customer says the garage door will not lift and one spring appears broken. Needs same-day availability if possible.',
@@ -67,6 +73,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Send service quote before close of business.',
     age: '1 hr old',
     value: 1800,
+    quoteStatus: 'Draft',
+    scheduleWindow: 'Tentative: Wed morning',
     requestedDate: 'Today',
     requestSummary:
       'Office manager requested a quote for an intermittent rooftop unit issue before next week of patient appointments.',
@@ -85,6 +93,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Bring railing samples and repair checklist.',
     age: 'Yesterday',
     value: 3200,
+    quoteStatus: 'Approved',
+    scheduleWindow: 'Thu 2:00 PM',
     requestedDate: 'Yesterday',
     requestSummary:
       'Homeowner wants loose railing sections, stair movement, and board rot reviewed before hosting family in three weeks.',
@@ -103,6 +113,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Send review request and maintenance renewal note.',
     age: '2 days old',
     value: 650,
+    quoteStatus: 'Approved',
+    scheduleWindow: 'Completed',
     requestedDate: 'This week',
     requestSummary:
       'Recurring client completed a lighting check. Follow-up is ready for review request and renewal conversation.',
@@ -121,6 +133,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Add photos to quote and confirm start window.',
     age: '3 hr old',
     value: 4900,
+    quoteStatus: 'Draft',
+    scheduleWindow: 'Tentative: Tomorrow AM',
     requestedDate: 'Today',
     requestSummary:
       'Homeowner reported water entry after storms and uploaded photos. Needs quote range and earliest assessment window.',
@@ -139,6 +153,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Check preferred after-hours access time.',
     age: '38 min old',
     value: 900,
+    quoteStatus: 'Not started',
+    scheduleWindow: 'Unscheduled',
     requestedDate: 'Today',
     requestSummary:
       'Salon wants inspection after flickering lights near styling stations. Work must happen outside client hours.',
@@ -157,6 +173,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Confirm weather window and crew arrival.',
     age: '2 days old',
     value: 780,
+    quoteStatus: 'Approved',
+    scheduleWindow: 'Fri 8:00 AM',
     requestedDate: 'Monday',
     requestSummary:
       'Customer approved driveway cleaning and sealing. Needs weather confirmation before crew dispatch.',
@@ -175,6 +193,8 @@ const initialLeads: Lead[] = [
     nextAction: 'Call board contact about approved fixture count.',
     age: '4 days old',
     value: 6200,
+    quoteStatus: 'Sent',
+    scheduleWindow: 'Pending board approval',
     requestedDate: 'Last week',
     requestSummary:
       'HOA board has fixture count questions before approving the landscape lighting package.',
@@ -394,6 +414,56 @@ function DashboardPreview() {
     setSelectedLeadId(leadId);
   }
 
+  function handleQuoteChange(leadId: number, value: number, quoteStatus: QuoteStatus) {
+    setLeadItems((current) =>
+      current.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              quoteStatus,
+              value,
+              nextAction: getNextActionForQuoteStatus(quoteStatus),
+            }
+          : lead,
+      ),
+    );
+    setLeadActivities((current) => ({
+      ...current,
+      [leadId]: [
+        { time: 'Now', detail: `Quote updated to ${formatCurrency(value)} and marked ${quoteStatus}.` },
+        ...(current[leadId] || []),
+      ],
+    }));
+    setSelectedLeadId(leadId);
+  }
+
+  function handleScheduleLead(leadId: number) {
+    setLeadItems((current) =>
+      current.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              quoteStatus: 'Approved',
+              scheduleWindow:
+                lead.scheduleWindow === 'Unscheduled' || lead.scheduleWindow.startsWith('Tentative')
+                  ? 'Next available crew window'
+                  : lead.scheduleWindow,
+              status: 'Scheduled',
+              nextAction: 'Confirm schedule, access notes, and crew readiness.',
+            }
+          : lead,
+      ),
+    );
+    setLeadActivities((current) => ({
+      ...current,
+      [leadId]: [
+        { time: 'Now', detail: 'Lead converted to a scheduled job.' },
+        ...(current[leadId] || []),
+      ],
+    }));
+    setSelectedLeadId(leadId);
+  }
+
   function handleAddNote() {
     const trimmedNote = noteDraft.trim();
 
@@ -424,8 +494,8 @@ function DashboardPreview() {
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-slate/70">
-            Stage 3 makes each lead actionable with a detail workspace, status movement,
-            activity notes, and the customer context a service owner needs before calling back.
+            Stage 4 connects the sales motion to scheduling with quote controls, approved
+            work, and upcoming jobs a service owner can act on quickly.
           </p>
         </div>
 
@@ -478,8 +548,12 @@ function DashboardPreview() {
             noteDraft={noteDraft}
             onAddNote={handleAddNote}
             onNoteChange={setNoteDraft}
+            onQuoteChange={handleQuoteChange}
+            onScheduleLead={handleScheduleLead}
             onStatusChange={handleStatusChange}
           />
+
+          <ScheduleBoard leads={leadItems} />
         </div>
       </div>
     </section>
@@ -716,6 +790,8 @@ function LeadDetailPanel({
   noteDraft,
   onAddNote,
   onNoteChange,
+  onQuoteChange,
+  onScheduleLead,
   onStatusChange,
 }: {
   activities: Activity[];
@@ -723,6 +799,8 @@ function LeadDetailPanel({
   noteDraft: string;
   onAddNote: () => void;
   onNoteChange: (value: string) => void;
+  onQuoteChange: (leadId: number, value: number, quoteStatus: QuoteStatus) => void;
+  onScheduleLead: (leadId: number) => void;
   onStatusChange: (leadId: number, status: LeadStatus) => void;
 }) {
   return (
@@ -777,6 +855,60 @@ function LeadDetailPanel({
             <p className="mt-4 border-t border-slate/10 pt-4 text-sm font-bold text-slate">
               Next action: {lead.nextAction}
             </p>
+          </div>
+
+          <div className="mt-6 border border-slate/10 bg-night p-5 text-white">
+            <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+              <div>
+                <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-signal">
+                  Quote builder
+                </p>
+                <h4 className="mt-3 font-display text-3xl font-bold leading-tight">
+                  Scope, price, and schedule intent in one place.
+                </h4>
+                <p className="mt-3 text-sm leading-6 text-white/60">
+                  Update the demo quote and mark it approved before converting the lead into
+                  scheduled work.
+                </p>
+              </div>
+              <div className="grid gap-3">
+                <label className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
+                  Estimated quote
+                  <input
+                    className="mt-2 w-full border border-white/10 bg-white px-4 py-3 text-lg font-extrabold text-night outline-none transition focus:border-signal"
+                    min="0"
+                    onChange={(event) =>
+                      onQuoteChange(lead.id, Number(event.target.value || 0), lead.quoteStatus)
+                    }
+                    type="number"
+                    value={lead.value}
+                  />
+                </label>
+                <div className="grid gap-2 sm:grid-cols-4">
+                  {quoteStatuses.map((status) => (
+                    <button
+                      className={`min-h-12 border px-3 py-2 text-sm font-extrabold transition ${
+                        lead.quoteStatus === status
+                          ? 'border-signal bg-signal text-night'
+                          : 'border-white/10 bg-white/[0.06] text-white/70 hover:border-signal hover:text-white'
+                      }`}
+                      key={status}
+                      onClick={() => onQuoteChange(lead.id, lead.value, status)}
+                      type="button"
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  className="bg-white px-5 py-3 text-sm font-extrabold text-night transition hover:bg-signal"
+                  onClick={() => onScheduleLead(lead.id)}
+                  type="button"
+                >
+                  Convert to scheduled job
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -884,6 +1016,85 @@ function FilterButton({
   );
 }
 
+function ScheduleBoard({ leads }: { leads: Lead[] }) {
+  const scheduledLeads = leads.filter((lead) => lead.status === 'Scheduled');
+  const approvedQuotes = leads.filter((lead) => lead.quoteStatus === 'Approved');
+  const pendingQuotes = leads.filter(
+    (lead) => lead.quoteStatus === 'Draft' || lead.quoteStatus === 'Sent',
+  );
+
+  return (
+    <section className="border border-slate/10 bg-white p-6 shadow-panel lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div>
+          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
+            Job schedule
+          </p>
+          <h3 className="mt-3 font-display text-3xl font-bold leading-tight text-night">
+            Approved work turns into visible crew-ready jobs.
+          </h3>
+          <p className="mt-4 text-sm leading-6 text-slate/70">
+            The schedule board gives the owner a quick view of upcoming jobs while keeping quote
+            momentum visible.
+          </p>
+          <div className="mt-6 grid gap-px overflow-hidden border border-slate/10 bg-slate/10 sm:grid-cols-3">
+            <ScheduleStat label="Scheduled jobs" value={String(scheduledLeads.length)} />
+            <ScheduleStat label="Approved value" value={formatCurrency(sumLeadValue(approvedQuotes))} />
+            <ScheduleStat label="Quotes pending" value={String(pendingQuotes.length)} />
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          {scheduledLeads.length > 0 ? (
+            scheduledLeads.map((lead) => (
+              <article
+                className="grid gap-4 border border-slate/10 bg-cloud p-5 md:grid-cols-[1fr_auto] md:items-center"
+                key={lead.id}
+              >
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-cert">
+                      {lead.scheduleWindow}
+                    </p>
+                    <span className="bg-signal/20 px-2 py-1 text-xs font-extrabold text-night">
+                      {lead.quoteStatus}
+                    </span>
+                  </div>
+                  <h4 className="mt-2 font-display text-2xl font-bold text-night">{lead.customer}</h4>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate/70">
+                    {lead.service} / {lead.area}
+                  </p>
+                </div>
+                <div className="border border-slate/10 bg-white px-4 py-3 text-left md:text-right">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-steel">
+                    Job value
+                  </p>
+                  <p className="mt-1 font-display text-2xl font-bold text-night">
+                    {formatCurrency(lead.value)}
+                  </p>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div className="border border-dashed border-slate/20 bg-cloud p-6 text-sm font-semibold leading-6 text-slate/60">
+              No scheduled jobs yet. Approve a quote and convert the lead to see it here.
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ScheduleStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-cloud p-4">
+      <p className="font-display text-3xl font-bold text-night">{value}</p>
+      <p className="mt-1 text-xs font-extrabold uppercase tracking-[0.12em] text-steel">{label}</p>
+    </div>
+  );
+}
+
 function CapabilitySection() {
   return (
     <section className="border-y border-slate/10 bg-white py-16" id="platform">
@@ -926,7 +1137,7 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Stage 3 lead workflow.</p>
+        <p>Portfolio demo concept. Stage 4 quote and scheduling workflow.</p>
       </div>
     </footer>
   );
@@ -950,6 +1161,17 @@ function getNextActionForStatus(status: LeadStatus) {
     'Needs quote': 'Prepare scope, price range, and send the quote.',
     Scheduled: 'Confirm schedule, access notes, and crew readiness.',
     'Follow-up': 'Send follow-up, review request, or closeout note.',
+  };
+
+  return nextActionByStatus[status];
+}
+
+function getNextActionForQuoteStatus(status: QuoteStatus) {
+  const nextActionByStatus: Record<QuoteStatus, string> = {
+    'Not started': 'Prepare first scope and quote range.',
+    Draft: 'Review quote details before sending.',
+    Sent: 'Follow up on the sent quote.',
+    Approved: 'Confirm schedule, access notes, and crew readiness.',
   };
 
   return nextActionByStatus[status];

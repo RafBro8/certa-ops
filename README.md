@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 3: lead detail and status workflow.
+Stage 4: quote and scheduling workflow.
 
 ## Brand Direction
 
@@ -28,7 +28,7 @@ Positioning:
 - Frontend-only demo first, with backend/auth/database deferred until the product direction is proven.
 - Designed as both a portfolio project and a future sellable small-business software package.
 
-## Stage 3 Includes
+## Stage 4 Includes
 
 - Vite, React, TypeScript, and Tailwind CSS.
 - CertaOps brand foundation.
@@ -43,6 +43,10 @@ Positioning:
 - Lead detail workspace with customer, contact, address, request summary, and next action.
 - Status update controls that move leads between pipeline columns.
 - Activity timeline and frontend-only note entry.
+- Quote builder controls for estimate value and quote status.
+- Frontend-only quote status workflow from not started to approved.
+- Convert-to-scheduled-job interaction for selected leads.
+- Upcoming jobs board with scheduled work and quote summary metrics.
 - README and staged build plan.
 
 ## Tech Stack
