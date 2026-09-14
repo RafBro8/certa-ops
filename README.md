@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 1: product foundation and frontend setup.
+Stage 2: lead pipeline dashboard.
 
 ## Brand Direction
 
@@ -28,13 +28,17 @@ Positioning:
 - Frontend-only demo first, with backend/auth/database deferred until the product direction is proven.
 - Designed as both a portfolio project and a future sellable small-business software package.
 
-## Stage 1 Includes
+## Stage 2 Includes
 
 - Vite, React, TypeScript, and Tailwind CSS.
 - CertaOps brand foundation.
 - Marketing shell with value proposition.
 - Dashboard shell with seeded service-business demo data.
-- Lead pipeline preview.
+- Lead pipeline dashboard with status columns.
+- Search, priority filtering, and source filtering.
+- Richer lead cards with contact, source, value, next action, and due timing.
+- Dashboard metrics that respond to filtered demo data.
+- Empty states for filtered pipeline columns.
 - README and staged build plan.
 
 ## Tech Stack

@@ -26,6 +26,7 @@ Build:
 - Priority and follow-up indicators.
 - Filtering and search.
 - Demo metrics.
+- Empty filtered-column states.
 
 Commit checkpoint:
 - `feat: add lead pipeline dashboard`
