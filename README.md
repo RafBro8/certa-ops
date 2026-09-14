@@ -1,0 +1,58 @@
+# CertaOps
+
+Portfolio-ready operations dashboard concept for local service businesses to track leads, quotes, jobs, and follow-ups from first contact to completion.
+
+## Current Stage
+
+Stage 1: product foundation and frontend setup.
+
+## Brand Direction
+
+Name:
+
+```text
+CertaOps
+```
+
+Tagline:
+
+```text
+From first lead to finished job.
+```
+
+Positioning:
+
+- Premium operations dashboard for local service businesses.
+- Built for contractors, HVAC, garage doors, cleaning, landscaping, detailing, and other service teams.
+- Helps owners track leads, quote status, scheduled work, and follow-ups.
+- Frontend-only demo first, with backend/auth/database deferred until the product direction is proven.
+- Designed as both a portfolio project and a future sellable small-business software package.
+
+## Stage 1 Includes
+
+- Vite, React, TypeScript, and Tailwind CSS.
+- CertaOps brand foundation.
+- Marketing shell with value proposition.
+- Dashboard shell with seeded service-business demo data.
+- Lead pipeline preview.
+- README and staged build plan.
+
+## Tech Stack
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+
+## Local Development
+
+```cmd
+npm install
+npm run dev
+```
+
+Quality checks:
+
+```cmd
+npm test
+```
