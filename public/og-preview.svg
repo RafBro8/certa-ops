@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="CertaOps preview card">
+  <rect width="1200" height="630" fill="#f7f9fc"/>
+  <rect x="0" y="0" width="1200" height="250" fill="#111827"/>
+  <rect x="98" y="95" width="72" height="72" fill="#111827" stroke="#f7f9fc" stroke-width="2"/>
+  <text x="116" y="141" fill="#f7f9fc" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800">co</text>
+  <text x="192" y="126" fill="#f7f9fc" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800">CertaOps</text>
+  <text x="194" y="170" fill="#14b8a6" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="800" letter-spacing="5">SERVICE OPERATIONS</text>
+  <text x="98" y="335" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="800">From first lead</text>
+  <text x="98" y="417" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="800">to finished job.</text>
+  <text x="102" y="480" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="600">Lead pipeline, quotes, scheduling, and follow-ups for local service teams.</text>
+  <rect x="760" y="170" width="330" height="320" fill="#ffffff" stroke="#d8dee8"/>
+  <rect x="792" y="210" width="116" height="16" fill="#2563eb"/>
+  <rect x="792" y="258" width="238" height="46" fill="#eef6ff"/>
+  <rect x="792" y="322" width="180" height="46" fill="#ecfeff"/>
+  <rect x="792" y="386" width="252" height="46" fill="#f7f9fc"/>
+  <rect x="934" y="210" width="116" height="16" fill="#14b8a6"/>
+  <rect x="934" y="258" width="90" height="46" fill="#f7f9fc"/>
+  <rect x="934" y="322" width="124" height="46" fill="#f7f9fc"/>
+</svg>

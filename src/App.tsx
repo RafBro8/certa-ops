@@ -1745,7 +1745,7 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Stage 7 polish and responsive QA.</p>
+        <p>Portfolio demo concept. Frontend-only product showcase.</p>
       </div>
     </footer>
   );

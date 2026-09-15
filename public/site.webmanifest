@@ -1,0 +1,16 @@
+{
+  "name": "CertaOps",
+  "short_name": "CertaOps",
+  "description": "A local service operations dashboard demo for leads, quotes, jobs, and follow-ups.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

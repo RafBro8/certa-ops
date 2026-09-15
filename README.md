@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 7: portfolio polish and responsive QA.
+Stage 8: deployment-ready portfolio release.
 
 ## Brand Direction
 
@@ -28,7 +28,7 @@ Positioning:
 - Frontend-only demo first, with backend/auth/database deferred until the product direction is proven.
 - Designed as both a portfolio project and a future sellable small-business software package.
 
-## Stage 7 Includes
+## Release Includes
 
 - Vite, React, TypeScript, and Tailwind CSS.
 - CertaOps brand foundation.
@@ -62,6 +62,8 @@ Positioning:
 - Premium lead-card hover/selected states.
 - Demo loading, empty, and error-state panel.
 - Portfolio-ready case study notes and screenshot references.
+- Production metadata, favicon, web manifest, and social preview card.
+- Vercel refresh fallback config for future client-side routes.
 - README and staged build plan.
 
 ## Case Study
@@ -106,6 +108,32 @@ CertaOps demonstrates a focused service-operations workspace where a business ow
 - Vite
 - Tailwind CSS
 
+## Live Demo
+
+Deployment target:
+
+```text
+Vercel
+```
+
+Suggested project name:
+
+```text
+certaops-demo
+```
+
+After deployment, add the live URL here:
+
+```text
+Live demo: pending
+```
+
+Suggested custom domain, if used:
+
+```text
+certaps.com
+```
+
 ## Local Development
 
 ```cmd
@@ -118,3 +146,22 @@ Quality checks:
 ```cmd
 npm test
 ```
+
+## Deployment Notes
+
+Vercel settings:
+
+- Framework preset: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Install command: `npm install`
+
+The project includes `vercel.json` with a fallback rewrite to `index.html`, which keeps future client-side routes safe on refresh.
+
+## Portfolio Release Checklist
+
+- Desktop and mobile screenshots are saved in `docs/screenshots`.
+- README explains the problem, solution, stack, features, and demo flow.
+- Public intake, pipeline, quote, schedule, follow-up, and demo states are interactive.
+- The footer identifies this as a portfolio demo concept.
+- `npm test` should pass before deploying.

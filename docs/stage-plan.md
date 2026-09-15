@@ -112,7 +112,7 @@ Build:
 Commit checkpoint:
 - `style: polish certaops demo`
 
-## Stage 8: Deployment
+## Stage 8: Deployment and Portfolio Release
 
 Goal: publish the frontend-only demo.
 
@@ -121,6 +121,9 @@ Build:
 - Route refresh config if needed.
 - Live demo URL.
 - Optional domain setup.
+- Production metadata, favicon, manifest, and social preview basics.
+- README deployment notes and portfolio-ready release checklist.
+- Final build verification.
 
 Commit checkpoint:
 - `chore: prepare deployment`
