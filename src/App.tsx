@@ -4,6 +4,9 @@ type LeadStatus = 'New lead' | 'Needs quote' | 'Scheduled' | 'Follow-up';
 type LeadPriority = 'High' | 'Medium' | 'Low';
 type LeadSource = 'Website' | 'Phone' | 'Referral' | 'Repeat client';
 type QuoteStatus = 'Not started' | 'Draft' | 'Sent' | 'Approved';
+type ReviewStatus = 'Not ready' | 'Queued' | 'Sent' | 'Received';
+type FollowUpStatus = 'None' | 'Due today' | 'Scheduled' | 'Sent';
+type LostReason = 'None' | 'Price' | 'Timing' | 'No response' | 'Out of scope';
 
 type Lead = {
   age: string;
@@ -15,7 +18,10 @@ type Lead = {
   id: number;
   nextAction: string;
   priority: LeadPriority;
+  followUpStatus: FollowUpStatus;
+  lostReason: LostReason;
   quoteStatus: QuoteStatus;
+  reviewStatus: ReviewStatus;
   scheduleWindow: string;
   service: string;
   source: LeadSource;
@@ -37,6 +43,7 @@ const pipelineStatuses: LeadStatus[] = ['New lead', 'Needs quote', 'Scheduled', 
 const priorityOptions: PriorityFilter[] = ['All', 'High', 'Medium', 'Low'];
 const sourceOptions: SourceFilter[] = ['All', 'Website', 'Phone', 'Referral', 'Repeat client'];
 const quoteStatuses: QuoteStatus[] = ['Not started', 'Draft', 'Sent', 'Approved'];
+const lostReasons: LostReason[] = ['None', 'Price', 'Timing', 'No response', 'Out of scope'];
 
 const initialLeads: Lead[] = [
   {
@@ -53,7 +60,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Confirm door size and emergency timing.',
     age: '12 min old',
     value: 425,
+    followUpStatus: 'None',
+    lostReason: 'None',
     quoteStatus: 'Not started',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Unscheduled',
     requestedDate: 'Today',
     requestSummary:
@@ -73,7 +83,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Send service quote before close of business.',
     age: '1 hr old',
     value: 1800,
+    followUpStatus: 'Scheduled',
+    lostReason: 'None',
     quoteStatus: 'Draft',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Tentative: Wed morning',
     requestedDate: 'Today',
     requestSummary:
@@ -93,7 +106,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Bring railing samples and repair checklist.',
     age: 'Yesterday',
     value: 3200,
+    followUpStatus: 'Scheduled',
+    lostReason: 'None',
     quoteStatus: 'Approved',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Thu 2:00 PM',
     requestedDate: 'Yesterday',
     requestSummary:
@@ -113,7 +129,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Send review request and maintenance renewal note.',
     age: '2 days old',
     value: 650,
+    followUpStatus: 'Due today',
+    lostReason: 'None',
     quoteStatus: 'Approved',
+    reviewStatus: 'Queued',
     scheduleWindow: 'Completed',
     requestedDate: 'This week',
     requestSummary:
@@ -133,7 +152,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Add photos to quote and confirm start window.',
     age: '3 hr old',
     value: 4900,
+    followUpStatus: 'Scheduled',
+    lostReason: 'None',
     quoteStatus: 'Draft',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Tentative: Tomorrow AM',
     requestedDate: 'Today',
     requestSummary:
@@ -153,7 +175,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Check preferred after-hours access time.',
     age: '38 min old',
     value: 900,
+    followUpStatus: 'None',
+    lostReason: 'None',
     quoteStatus: 'Not started',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Unscheduled',
     requestedDate: 'Today',
     requestSummary:
@@ -173,7 +198,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Confirm weather window and crew arrival.',
     age: '2 days old',
     value: 780,
+    followUpStatus: 'Scheduled',
+    lostReason: 'None',
     quoteStatus: 'Approved',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Fri 8:00 AM',
     requestedDate: 'Monday',
     requestSummary:
@@ -193,7 +221,10 @@ const initialLeads: Lead[] = [
     nextAction: 'Call board contact about approved fixture count.',
     age: '4 days old',
     value: 6200,
+    followUpStatus: 'Due today',
+    lostReason: 'None',
     quoteStatus: 'Sent',
+    reviewStatus: 'Not ready',
     scheduleWindow: 'Pending board approval',
     requestedDate: 'Last week',
     requestSummary:
@@ -381,13 +412,13 @@ function DashboardPreview() {
     { label: 'Visible leads', value: String(filteredLeads.length), tone: 'cert' },
     { label: 'Pipeline value', value: formatCurrency(sumLeadValue(filteredLeads)), tone: 'signal' },
     {
-      label: 'High priority',
-      value: String(filteredLeads.filter((lead) => lead.priority === 'High').length),
+      label: 'Reviews due',
+      value: String(filteredLeads.filter((lead) => lead.reviewStatus === 'Queued').length),
       tone: 'coral',
     },
     {
-      label: 'Needs action',
-      value: String(filteredLeads.filter((lead) => lead.status !== 'Scheduled').length),
+      label: 'Follow-ups',
+      value: String(filteredLeads.filter((lead) => lead.followUpStatus === 'Due today').length),
       tone: 'amber',
     },
   ];
@@ -448,6 +479,7 @@ function DashboardPreview() {
                 lead.scheduleWindow === 'Unscheduled' || lead.scheduleWindow.startsWith('Tentative')
                   ? 'Next available crew window'
                   : lead.scheduleWindow,
+              followUpStatus: 'Scheduled',
               status: 'Scheduled',
               nextAction: 'Confirm schedule, access notes, and crew readiness.',
             }
@@ -458,6 +490,85 @@ function DashboardPreview() {
       ...current,
       [leadId]: [
         { time: 'Now', detail: 'Lead converted to a scheduled job.' },
+        ...(current[leadId] || []),
+      ],
+    }));
+    setSelectedLeadId(leadId);
+  }
+
+  function handleFollowUpSent(leadId: number) {
+    setLeadItems((current) =>
+      current.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              followUpStatus: 'Sent',
+              status: 'Follow-up',
+              nextAction: 'Follow-up sent. Watch for reply or next review opportunity.',
+            }
+          : lead,
+      ),
+    );
+    setLeadActivities((current) => ({
+      ...current,
+      [leadId]: [
+        { time: 'Now', detail: 'Follow-up marked as sent.' },
+        ...(current[leadId] || []),
+      ],
+    }));
+    setSelectedLeadId(leadId);
+  }
+
+  function handleReviewRequest(leadId: number) {
+    setLeadItems((current) =>
+      current.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              followUpStatus: 'Sent',
+              reviewStatus: 'Sent',
+              status: 'Follow-up',
+              nextAction: 'Review request sent. Check back for response.',
+            }
+          : lead,
+      ),
+    );
+    setLeadActivities((current) => ({
+      ...current,
+      [leadId]: [
+        { time: 'Now', detail: 'Review request sent after completed work.' },
+        ...(current[leadId] || []),
+      ],
+    }));
+    setSelectedLeadId(leadId);
+  }
+
+  function handleLostReasonChange(leadId: number, lostReason: LostReason) {
+    setLeadItems((current) =>
+      current.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              lostReason,
+              status: lostReason === 'None' ? lead.status : 'Follow-up',
+              nextAction:
+                lostReason === 'None'
+                  ? getNextActionForStatus(lead.status)
+                  : `Opportunity marked lost: ${lostReason}.`,
+            }
+          : lead,
+      ),
+    );
+    setLeadActivities((current) => ({
+      ...current,
+      [leadId]: [
+        {
+          time: 'Now',
+          detail:
+            lostReason === 'None'
+              ? 'Lost reason cleared.'
+              : `Lost reason recorded as ${lostReason}.`,
+        },
         ...(current[leadId] || []),
       ],
     }));
@@ -494,8 +605,8 @@ function DashboardPreview() {
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-slate/70">
-            Stage 4 connects the sales motion to scheduling with quote controls, approved
-            work, and upcoming jobs a service owner can act on quickly.
+            Stage 5 closes the loop with follow-up reminders, review requests, and lost
+            opportunity notes that protect future revenue.
           </p>
         </div>
 
@@ -547,13 +658,22 @@ function DashboardPreview() {
             lead={selectedLead}
             noteDraft={noteDraft}
             onAddNote={handleAddNote}
+            onFollowUpSent={handleFollowUpSent}
+            onLostReasonChange={handleLostReasonChange}
             onNoteChange={setNoteDraft}
             onQuoteChange={handleQuoteChange}
+            onReviewRequest={handleReviewRequest}
             onScheduleLead={handleScheduleLead}
             onStatusChange={handleStatusChange}
           />
 
           <ScheduleBoard leads={leadItems} />
+          <FollowUpBoard
+            leads={leadItems}
+            onFollowUpSent={handleFollowUpSent}
+            onLeadSelect={setSelectedLeadId}
+            onReviewRequest={handleReviewRequest}
+          />
         </div>
       </div>
     </section>
@@ -789,8 +909,11 @@ function LeadDetailPanel({
   lead,
   noteDraft,
   onAddNote,
+  onFollowUpSent,
+  onLostReasonChange,
   onNoteChange,
   onQuoteChange,
+  onReviewRequest,
   onScheduleLead,
   onStatusChange,
 }: {
@@ -798,8 +921,11 @@ function LeadDetailPanel({
   lead: Lead;
   noteDraft: string;
   onAddNote: () => void;
+  onFollowUpSent: (leadId: number) => void;
+  onLostReasonChange: (leadId: number, lostReason: LostReason) => void;
   onNoteChange: (value: string) => void;
   onQuoteChange: (leadId: number, value: number, quoteStatus: QuoteStatus) => void;
+  onReviewRequest: (leadId: number) => void;
   onScheduleLead: (leadId: number) => void;
   onStatusChange: (leadId: number, status: LeadStatus) => void;
 }) {
@@ -932,6 +1058,47 @@ function LeadDetailPanel({
                   {status}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="border border-mist bg-cloud p-5">
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-cert">
+              Closeout workflow
+            </p>
+            <div className="mt-4 grid gap-px overflow-hidden border border-slate/10 bg-slate/10 sm:grid-cols-3">
+              <DetailItem label="Follow-up" value={lead.followUpStatus} />
+              <DetailItem label="Review" value={lead.reviewStatus} />
+              <DetailItem label="Lost reason" value={lead.lostReason} />
+            </div>
+            <div className="mt-4 grid gap-3">
+              <button
+                className="border border-slate/10 bg-white px-4 py-3 text-left text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert"
+                onClick={() => onFollowUpSent(lead.id)}
+                type="button"
+              >
+                Mark follow-up sent
+              </button>
+              <button
+                className="border border-slate/10 bg-white px-4 py-3 text-left text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert"
+                onClick={() => onReviewRequest(lead.id)}
+                type="button"
+              >
+                Send review request
+              </button>
+              <label className="grid gap-2 text-sm font-bold text-slate">
+                Lost reason
+                <select
+                  className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                  onChange={(event) =>
+                    onLostReasonChange(lead.id, event.target.value as LostReason)
+                  }
+                  value={lead.lostReason}
+                >
+                  {lostReasons.map((reason) => (
+                    <option key={reason}>{reason}</option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
 
@@ -1095,6 +1262,111 @@ function ScheduleStat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function FollowUpBoard({
+  leads,
+  onFollowUpSent,
+  onLeadSelect,
+  onReviewRequest,
+}: {
+  leads: Lead[];
+  onFollowUpSent: (leadId: number) => void;
+  onLeadSelect: (leadId: number) => void;
+  onReviewRequest: (leadId: number) => void;
+}) {
+  const reviewQueue = leads.filter((lead) => lead.reviewStatus === 'Queued');
+  const followUpsDue = leads.filter((lead) => lead.followUpStatus === 'Due today');
+  const lostLeads = leads.filter((lead) => lead.lostReason !== 'None');
+  const closeoutItems = [...followUpsDue, ...reviewQueue].filter(
+    (lead, index, items) => items.findIndex((item) => item.id === lead.id) === index,
+  );
+
+  return (
+    <section className="overflow-hidden border border-slate/10 bg-night text-white shadow-panel lg:col-span-2">
+      <div className="grid gap-px bg-white/10 lg:grid-cols-[0.7fr_1.3fr]">
+        <div className="bg-night p-6">
+          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-signal">
+            Follow-up system
+          </p>
+          <h3 className="mt-3 font-display text-3xl font-bold leading-tight">
+            Finished jobs should create reviews, referrals, and clean records.
+          </h3>
+          <p className="mt-4 text-sm leading-6 text-white/60">
+            This keeps post-job actions visible instead of relying on memory, sticky notes, or
+            buried text threads.
+          </p>
+          <div className="mt-6 grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-3 lg:grid-cols-1">
+            <FollowUpStat label="Follow-ups due" value={String(followUpsDue.length)} />
+            <FollowUpStat label="Reviews queued" value={String(reviewQueue.length)} />
+            <FollowUpStat label="Lost reasons" value={String(lostLeads.length)} />
+          </div>
+        </div>
+
+        <div className="grid gap-4 bg-white p-6 text-night">
+          {closeoutItems.length > 0 ? (
+            closeoutItems.map((lead) => (
+              <article
+                className="grid gap-4 border border-slate/10 bg-cloud p-5 xl:grid-cols-[1fr_auto] xl:items-center"
+                key={lead.id}
+              >
+                <button
+                  className="text-left"
+                  onClick={() => onLeadSelect(lead.id)}
+                  type="button"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <span className="bg-amber/20 px-2 py-1 text-xs font-extrabold text-amber">
+                      {lead.followUpStatus}
+                    </span>
+                    <span className="bg-cert/10 px-2 py-1 text-xs font-extrabold text-cert">
+                      Review: {lead.reviewStatus}
+                    </span>
+                  </div>
+                  <h4 className="mt-3 font-display text-2xl font-bold">{lead.customer}</h4>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate/70">
+                    {lead.service} / {lead.area}
+                  </p>
+                </button>
+
+                <div className="grid gap-2 sm:grid-cols-2 xl:min-w-72">
+                  <button
+                    className="bg-night px-4 py-3 text-sm font-extrabold text-white transition hover:bg-cert"
+                    onClick={() => onFollowUpSent(lead.id)}
+                    type="button"
+                  >
+                    Mark sent
+                  </button>
+                  <button
+                    className="border border-slate/10 bg-white px-4 py-3 text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert"
+                    onClick={() => onReviewRequest(lead.id)}
+                    type="button"
+                  >
+                    Send review
+                  </button>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div className="border border-dashed border-slate/20 bg-cloud p-6 text-sm font-semibold leading-6 text-slate/60">
+              No follow-ups or review requests are waiting. New closeout work will appear here.
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FollowUpStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white/[0.06] p-4">
+      <p className="font-display text-3xl font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs font-extrabold uppercase tracking-[0.12em] text-white/50">
+        {label}
+      </p>
+    </div>
+  );
+}
+
 function CapabilitySection() {
   return (
     <section className="border-y border-slate/10 bg-white py-16" id="platform">
@@ -1137,7 +1409,7 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Stage 4 quote and scheduling workflow.</p>
+        <p>Portfolio demo concept. Stage 5 review and follow-up workflow.</p>
       </div>
     </footer>
   );

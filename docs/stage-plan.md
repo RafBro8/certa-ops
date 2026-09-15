@@ -72,6 +72,9 @@ Build:
 - Review request tracker.
 - Follow-up reminders.
 - Lost lead reason tracking.
+- Follow-up sent interaction.
+- Review request sent interaction.
+- Dashboard metrics for reviews due, follow-ups due, and lost opportunities.
 
 Commit checkpoint:
 - `feat: add follow up tracker`
