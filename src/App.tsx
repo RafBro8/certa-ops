@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 
 type LeadStatus = 'New lead' | 'Needs quote' | 'Scheduled' | 'Follow-up';
 type LeadPriority = 'High' | 'Medium' | 'Low';
@@ -36,6 +36,15 @@ type Activity = {
   time: string;
 };
 
+type IntakeForm = {
+  contact: string;
+  location: string;
+  name: string;
+  notes: string;
+  serviceType: string;
+  urgency: 'Today' | 'This week' | 'Planning ahead';
+};
+
 type PriorityFilter = 'All' | LeadPriority;
 type SourceFilter = 'All' | LeadSource;
 
@@ -44,6 +53,21 @@ const priorityOptions: PriorityFilter[] = ['All', 'High', 'Medium', 'Low'];
 const sourceOptions: SourceFilter[] = ['All', 'Website', 'Phone', 'Referral', 'Repeat client'];
 const quoteStatuses: QuoteStatus[] = ['Not started', 'Draft', 'Sent', 'Approved'];
 const lostReasons: LostReason[] = ['None', 'Price', 'Timing', 'No response', 'Out of scope'];
+const serviceOptions = [
+  'Emergency repair',
+  'Estimate request',
+  'Maintenance visit',
+  'Walkthrough / consultation',
+  'Project follow-up',
+];
+const initialIntakeForm: IntakeForm = {
+  contact: '',
+  location: '',
+  name: '',
+  notes: '',
+  serviceType: serviceOptions[0],
+  urgency: 'This week',
+};
 
 const initialLeads: Lead[] = [
   {
@@ -319,6 +343,7 @@ function Header() {
         <nav className="flex flex-wrap gap-2 text-sm font-bold text-slate/70" aria-label="Primary">
           {[
             ['Platform', '#platform'],
+            ['Request', '#intake'],
             ['Dashboard', '#dashboard'],
             ['Workflow', '#dashboard'],
             ['Demo', '#dashboard'],
@@ -361,11 +386,11 @@ function Hero() {
             one place to manage leads, quotes, scheduled work, and follow-ups.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a className="bg-signal px-6 py-3 text-center text-sm font-extrabold text-night transition hover:bg-white" href="#dashboard">
-              View dashboard
+            <a className="bg-signal px-6 py-3 text-center text-sm font-extrabold text-night transition hover:bg-white" href="#intake">
+              Try intake flow
             </a>
-            <a className="border border-white/20 bg-white/10 px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-white hover:text-night" href="#platform">
-              See product direction
+            <a className="border border-white/20 bg-white/10 px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-white hover:text-night" href="#dashboard">
+              View dashboard
             </a>
           </div>
         </div>
@@ -391,6 +416,7 @@ function DashboardPreview() {
   const [selectedLeadId, setSelectedLeadId] = useState(initialLeads[0].id);
   const [leadActivities, setLeadActivities] = useState(initialLeadActivities);
   const [noteDraft, setNoteDraft] = useState('');
+  const [submittedLeadId, setSubmittedLeadId] = useState<number | null>(null);
 
   const filteredLeads = useMemo(
     () =>
@@ -592,9 +618,58 @@ function DashboardPreview() {
     setNoteDraft('');
   }
 
+  function handleIntakeSubmit(form: IntakeForm) {
+    const nextId = Math.max(...leadItems.map((lead) => lead.id)) + 1;
+    const priority = getPriorityForUrgency(form.urgency);
+    const estimatedValue = getEstimatedValueForService(form.serviceType);
+    const newLead: Lead = {
+      id: nextId,
+      customer: form.name,
+      contact: form.contact,
+      service: form.serviceType,
+      area: form.location,
+      address: form.location,
+      status: 'New lead',
+      priority,
+      source: 'Website',
+      due: getDueForUrgency(form.urgency),
+      nextAction: 'Review intake request and call the customer.',
+      age: 'Just now',
+      value: estimatedValue,
+      followUpStatus: 'None',
+      lostReason: 'None',
+      quoteStatus: 'Not started',
+      reviewStatus: 'Not ready',
+      scheduleWindow: 'Unscheduled',
+      requestedDate: 'Today',
+      requestSummary:
+        form.notes.trim() ||
+        `Customer submitted a ${form.serviceType.toLowerCase()} request with ${form.urgency.toLowerCase()} timing.`,
+    };
+
+    setLeadItems((current) => [newLead, ...current]);
+    setLeadActivities((current) => ({
+      ...current,
+      [nextId]: [
+        { time: 'Now', detail: 'Public intake request submitted from the demo form.' },
+        { time: 'Now', detail: `Urgency captured as ${form.urgency}.` },
+      ],
+    }));
+    setPriorityFilter('All');
+    setSearchTerm('');
+    setSourceFilter('All');
+    setSelectedLeadId(nextId);
+    setSubmittedLeadId(nextId);
+  }
+
   return (
-    <section className="py-16" id="dashboard">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+    <>
+      <LeadIntakeSection
+        onLeadCreate={handleIntakeSubmit}
+        submittedLead={leadItems.find((lead) => lead.id === submittedLeadId) || null}
+      />
+      <section className="py-16" id="dashboard">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mb-8 grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
           <div>
             <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
@@ -605,8 +680,8 @@ function DashboardPreview() {
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-slate/70">
-            Stage 5 closes the loop with follow-up reminders, review requests, and lost
-            opportunity notes that protect future revenue.
+            Stage 6 connects public intake to the operations dashboard so new requests can
+            move through quote, schedule, follow-up, and review.
           </p>
         </div>
 
@@ -675,8 +750,199 @@ function DashboardPreview() {
             onReviewRequest={handleReviewRequest}
           />
         </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function LeadIntakeSection({
+  onLeadCreate,
+  submittedLead,
+}: {
+  onLeadCreate: (form: IntakeForm) => void;
+  submittedLead: Lead | null;
+}) {
+  const [form, setForm] = useState<IntakeForm>(initialIntakeForm);
+  const [formError, setFormError] = useState('');
+
+  function updateField<K extends keyof IntakeForm>(field: K, value: IntakeForm[K]) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setFormError('');
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!form.name.trim() || !form.contact.trim() || !form.location.trim()) {
+      setFormError('Name, contact, and location are required for the demo request.');
+      return;
+    }
+
+    onLeadCreate({
+      ...form,
+      contact: form.contact.trim(),
+      location: form.location.trim(),
+      name: form.name.trim(),
+      notes: form.notes.trim(),
+    });
+    setForm(initialIntakeForm);
+  }
+
+  return (
+    <section className="border-b border-slate/10 bg-white py-16" id="intake">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+          <div>
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
+              Public lead intake
+            </p>
+            <h2 className="mt-4 max-w-2xl font-display text-4xl font-bold leading-tight text-night">
+              A customer request should land where the work actually gets managed.
+            </h2>
+            <p className="mt-5 max-w-xl leading-7 text-slate/70">
+              This frontend-only intake flow simulates the public request form a service business
+              could place on its website. Submissions become live dashboard leads immediately.
+            </p>
+
+            <div className="mt-8 grid gap-px overflow-hidden border border-slate/10 bg-slate/10 sm:grid-cols-3 lg:grid-cols-1">
+              <IntakeSignal label="Source" value="Website" />
+              <IntakeSignal label="Default status" value="New lead" />
+              <IntakeSignal label="Owner action" value="Call back" />
+            </div>
+          </div>
+
+          <div className="grid gap-5">
+            <form className="border border-slate/10 bg-cloud p-6 shadow-panel" onSubmit={handleSubmit}>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-bold text-slate">
+                  Name
+                  <input
+                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    onChange={(event) => updateField('name', event.target.value)}
+                    placeholder="Customer or business name"
+                    value={form.name}
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm font-bold text-slate">
+                  Contact
+                  <input
+                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    onChange={(event) => updateField('contact', event.target.value)}
+                    placeholder="Phone or email"
+                    value={form.contact}
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm font-bold text-slate">
+                  Service type
+                  <select
+                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    onChange={(event) => updateField('serviceType', event.target.value)}
+                    value={form.serviceType}
+                  >
+                    {serviceOptions.map((service) => (
+                      <option key={service}>{service}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="grid gap-2 text-sm font-bold text-slate">
+                  Location
+                  <input
+                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    onChange={(event) => updateField('location', event.target.value)}
+                    placeholder="Town or neighborhood"
+                    value={form.location}
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm font-bold text-slate md:col-span-2">
+                  Timing
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {(['Today', 'This week', 'Planning ahead'] as IntakeForm['urgency'][]).map(
+                      (urgency) => (
+                        <button
+                          className={`min-h-12 border px-4 py-3 text-left text-sm font-extrabold transition ${
+                            form.urgency === urgency
+                              ? 'border-cert bg-cert text-white'
+                              : 'border-slate/10 bg-white text-slate hover:border-cert hover:text-cert'
+                          }`}
+                          key={urgency}
+                          onClick={() => updateField('urgency', urgency)}
+                          type="button"
+                        >
+                          {urgency}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </label>
+
+                <label className="grid gap-2 text-sm font-bold text-slate md:col-span-2">
+                  Request notes
+                  <textarea
+                    className="min-h-28 border border-slate/10 bg-white px-3 py-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    onChange={(event) => updateField('notes', event.target.value)}
+                    placeholder="Tell us what happened, what you need, and any timing constraints."
+                    value={form.notes}
+                  />
+                </label>
+              </div>
+
+              {formError ? (
+                <p className="mt-4 border border-coral/30 bg-coral/10 p-3 text-sm font-bold text-coral">
+                  {formError}
+                </p>
+              ) : null}
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  className="bg-night px-6 py-3 text-sm font-extrabold text-white transition hover:bg-cert"
+                  type="submit"
+                >
+                  Submit demo request
+                </button>
+                <p className="text-sm font-semibold text-slate/60">
+                  No backend yet. This adds a local demo lead to the dashboard.
+                </p>
+              </div>
+            </form>
+
+            {submittedLead ? (
+              <div className="border border-signal/30 bg-signal/10 p-5">
+                <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-night">
+                  Request added
+                </p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-night">
+                  {submittedLead.customer} is now selected in the pipeline.
+                </h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate/70">
+                  Lead #{submittedLead.id} was created as a {submittedLead.priority.toLowerCase()}
+                  -priority website request.
+                </p>
+                <a
+                  className="mt-4 inline-flex bg-night px-5 py-3 text-sm font-extrabold text-white transition hover:bg-cert"
+                  href="#dashboard"
+                >
+                  View new lead
+                </a>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+function IntakeSignal({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-cloud p-4">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-steel">{label}</p>
+      <p className="mt-2 font-display text-2xl font-bold text-night">{value}</p>
+    </div>
   );
 }
 
@@ -1409,7 +1675,7 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Stage 5 review and follow-up workflow.</p>
+        <p>Portfolio demo concept. Stage 6 public lead intake workflow.</p>
       </div>
     </footer>
   );
@@ -1425,6 +1691,38 @@ function formatCurrency(value: number) {
 
 function sumLeadValue(items: Lead[]) {
   return items.reduce((total, lead) => total + lead.value, 0);
+}
+
+function getPriorityForUrgency(urgency: IntakeForm['urgency']): LeadPriority {
+  const priorityByUrgency: Record<IntakeForm['urgency'], LeadPriority> = {
+    'Planning ahead': 'Low',
+    'This week': 'Medium',
+    Today: 'High',
+  };
+
+  return priorityByUrgency[urgency];
+}
+
+function getDueForUrgency(urgency: IntakeForm['urgency']) {
+  const dueByUrgency: Record<IntakeForm['urgency'], string> = {
+    'Planning ahead': 'Review this week',
+    'This week': 'Call within 24 hours',
+    Today: 'Call as soon as possible',
+  };
+
+  return dueByUrgency[urgency];
+}
+
+function getEstimatedValueForService(serviceType: string) {
+  const valueByService: Record<string, number> = {
+    'Emergency repair': 850,
+    'Estimate request': 2400,
+    'Maintenance visit': 525,
+    'Project follow-up': 650,
+    'Walkthrough / consultation': 1200,
+  };
+
+  return valueByService[serviceType] || 900;
 }
 
 function getNextActionForStatus(status: LeadStatus) {

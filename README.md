@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 5: review and follow-up workflow.
+Stage 6: public lead intake workflow.
 
 ## Brand Direction
 
@@ -28,7 +28,7 @@ Positioning:
 - Frontend-only demo first, with backend/auth/database deferred until the product direction is proven.
 - Designed as both a portfolio project and a future sellable small-business software package.
 
-## Stage 5 Includes
+## Stage 6 Includes
 
 - Vite, React, TypeScript, and Tailwind CSS.
 - CertaOps brand foundation.
@@ -52,6 +52,11 @@ Positioning:
 - Follow-up sent interaction on selected leads and queue cards.
 - Lost lead reason tracking.
 - Dashboard metrics for reviews due and follow-ups due.
+- Public-facing lead intake section.
+- Service request form with customer, contact, location, service type, urgency, and notes.
+- Frontend-only form validation and confirmation state.
+- Submitted requests become new selected dashboard leads.
+- Intake submissions initialize local activity timeline entries.
 - README and staged build plan.
 
 ## Tech Stack

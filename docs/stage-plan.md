@@ -88,6 +88,9 @@ Build:
 - Service request form.
 - Add submitted request into demo pipeline.
 - Confirmation state.
+- Basic required-field validation.
+- New lead selection after intake submission.
+- Frontend-only intake activity timeline entries.
 
 Commit checkpoint:
 - `feat: add public lead intake`
