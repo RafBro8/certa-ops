@@ -10,6 +10,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
 }
 
 body {
@@ -28,4 +29,13 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+::selection {
+  background: rgba(20, 184, 166, 0.24);
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #14b8a6;
+  outline-offset: 3px;
 }

@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 6: public lead intake workflow.
+Stage 7: portfolio polish and responsive QA.
 
 ## Brand Direction
 
@@ -28,7 +28,7 @@ Positioning:
 - Frontend-only demo first, with backend/auth/database deferred until the product direction is proven.
 - Designed as both a portfolio project and a future sellable small-business software package.
 
-## Stage 6 Includes
+## Stage 7 Includes
 
 - Vite, React, TypeScript, and Tailwind CSS.
 - CertaOps brand foundation.
@@ -57,7 +57,47 @@ Positioning:
 - Frontend-only form validation and confirmation state.
 - Submitted requests become new selected dashboard leads.
 - Intake submissions initialize local activity timeline entries.
+- Responsive dashboard polish for mobile, tablet, and desktop.
+- Stronger keyboard focus states and form accessibility treatment.
+- Premium lead-card hover/selected states.
+- Demo loading, empty, and error-state panel.
+- Portfolio-ready case study notes and screenshot references.
 - README and staged build plan.
+
+## Case Study
+
+### Problem
+
+Local service businesses often manage leads, quotes, job scheduling, and review follow-ups across calls, texts, spreadsheets, and memory. That creates missed callbacks, unclear quote status, and lost review opportunities.
+
+### Solution
+
+CertaOps demonstrates a focused service-operations workspace where a business owner can capture a public request, review the lead, move it through quote and scheduling, and close the loop with follow-up and review actions.
+
+### Demo Flow
+
+1. Submit a customer request from the public intake section.
+2. See the request appear as a new selected website lead.
+3. Move the lead through pipeline status columns.
+4. Update quote value and quote status.
+5. Convert the lead into a scheduled job.
+6. Mark follow-up and review actions from the closeout workflow.
+
+### Feature Highlights
+
+- Frontend-only public intake flow.
+- Interactive lead pipeline with filters and selected lead state.
+- Quote builder prototype.
+- Upcoming jobs board.
+- Review and follow-up tracker.
+- Lost opportunity reason tracking.
+- Demo loading, empty, and error states.
+- Responsive layout QA across desktop and mobile.
+
+### Screenshots
+
+- `docs/screenshots/certaops-desktop.png`
+- `docs/screenshots/certaops-mobile.png`
 
 ## Tech Stack
 

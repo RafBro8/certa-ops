@@ -326,7 +326,7 @@ function App() {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-20 border-b border-slate/10 bg-cloud/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-slate/10 bg-cloud/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
         <a className="flex items-center gap-3" href="#top" aria-label="CertaOps home">
           <span className="grid h-10 w-10 place-items-center bg-night text-sm font-black text-white">
@@ -340,16 +340,16 @@ function Header() {
           </span>
         </a>
 
-        <nav className="flex flex-wrap gap-2 text-sm font-bold text-slate/70" aria-label="Primary">
+        <nav className="flex gap-2 overflow-x-auto pb-1 text-sm font-bold text-slate/70 sm:flex-wrap sm:overflow-visible sm:pb-0" aria-label="Primary">
           {[
             ['Platform', '#platform'],
             ['Request', '#intake'],
             ['Dashboard', '#dashboard'],
-            ['Workflow', '#dashboard'],
-            ['Demo', '#dashboard'],
+            ['Workflow', '#workflow'],
+            ['Demo', '#demo'],
           ].map(([item, href]) => (
             <a
-              className="border border-slate/10 bg-white px-4 py-2 transition hover:border-cert hover:text-cert"
+              className="shrink-0 border border-slate/10 bg-white px-4 py-2 transition hover:border-cert hover:text-cert"
               href={href}
               key={item}
             >
@@ -680,8 +680,8 @@ function DashboardPreview() {
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-slate/70">
-            Stage 6 connects public intake to the operations dashboard so new requests can
-            move through quote, schedule, follow-up, and review.
+            Stage 7 gives the demo a more polished portfolio finish with tighter states,
+            responsive dashboard behavior, and clearer product storytelling.
           </p>
         </div>
 
@@ -698,7 +698,7 @@ function DashboardPreview() {
             <TodayFocus />
           </aside>
 
-          <section className="overflow-hidden border border-slate/10 bg-night text-white shadow-panel">
+          <section className="overflow-hidden border border-slate/10 bg-night text-white shadow-panel" id="workflow">
             <div className="border-b border-white/10 p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
@@ -715,7 +715,7 @@ function DashboardPreview() {
               </div>
             </div>
 
-            <div className="grid gap-px bg-white/10 xl:grid-cols-4">
+            <div className="grid gap-px bg-white/10 md:grid-cols-2 xl:grid-cols-4">
               {pipelineStatuses.map((status) => (
                 <PipelineColumn
                   key={status}
@@ -749,6 +749,7 @@ function DashboardPreview() {
             onLeadSelect={setSelectedLeadId}
             onReviewRequest={handleReviewRequest}
           />
+          <DemoStatePanel />
         </div>
         </div>
       </section>
@@ -813,14 +814,16 @@ function LeadIntakeSection({
           </div>
 
           <div className="grid gap-5">
-            <form className="border border-slate/10 bg-cloud p-6 shadow-panel" onSubmit={handleSubmit}>
+            <form className="border border-slate/10 bg-cloud p-6 shadow-panel" noValidate onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-bold text-slate">
                   Name
                   <input
+                    aria-invalid={Boolean(formError && !form.name.trim())}
                     className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
                     onChange={(event) => updateField('name', event.target.value)}
                     placeholder="Customer or business name"
+                    required
                     value={form.name}
                   />
                 </label>
@@ -828,9 +831,11 @@ function LeadIntakeSection({
                 <label className="grid gap-2 text-sm font-bold text-slate">
                   Contact
                   <input
+                    aria-invalid={Boolean(formError && !form.contact.trim())}
                     className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
                     onChange={(event) => updateField('contact', event.target.value)}
                     placeholder="Phone or email"
+                    required
                     value={form.contact}
                   />
                 </label>
@@ -851,9 +856,11 @@ function LeadIntakeSection({
                 <label className="grid gap-2 text-sm font-bold text-slate">
                   Location
                   <input
+                    aria-invalid={Boolean(formError && !form.location.trim())}
                     className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
                     onChange={(event) => updateField('location', event.target.value)}
                     placeholder="Town or neighborhood"
+                    required
                     value={form.location}
                   />
                 </label>
@@ -892,7 +899,7 @@ function LeadIntakeSection({
               </div>
 
               {formError ? (
-                <p className="mt-4 border border-coral/30 bg-coral/10 p-3 text-sm font-bold text-coral">
+                <p className="mt-4 border border-coral/30 bg-coral/10 p-3 text-sm font-bold text-coral" role="alert">
                   {formError}
                 </p>
               ) : null}
@@ -1137,8 +1144,8 @@ function LeadCard({
   return (
     <button
       aria-pressed={active}
-      className={`group border p-4 text-left transition hover:border-signal/50 hover:bg-white/10 ${
-        active ? 'border-signal bg-white/10' : 'border-white/10 bg-white/[0.06]'
+      className={`group border p-4 text-left transition hover:-translate-y-0.5 hover:border-signal/50 hover:bg-white/10 ${
+        active ? 'border-signal bg-white/10 shadow-glow' : 'border-white/10 bg-white/[0.06]'
       }`}
       onClick={() => onSelect(lead.id)}
       type="button"
@@ -1156,6 +1163,9 @@ function LeadCard({
         <span className="border border-white/10 px-2 py-1 text-xs font-bold text-white/60">
           {lead.area}
         </span>
+        <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-bold text-white/60">
+          Quote: {lead.quoteStatus}
+        </span>
       </div>
       <div className="mt-4 grid gap-2 border-t border-white/10 pt-3 text-xs font-bold text-white/50">
         <p>{lead.contact}</p>
@@ -1163,7 +1173,10 @@ function LeadCard({
         <p className="text-white/70">{lead.nextAction}</p>
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-xs font-bold text-white/40">{lead.age}</p>
+        <p className="text-xs font-bold text-white/40">
+          {lead.age}
+          {lead.followUpStatus !== 'None' ? ` / ${lead.followUpStatus}` : ''}
+        </p>
         <p className="font-display text-lg font-bold text-white">{formatCurrency(lead.value)}</p>
       </div>
     </button>
@@ -1633,6 +1646,63 @@ function FollowUpStat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function DemoStatePanel() {
+  const states = [
+    {
+      label: 'Loading',
+      title: 'Syncing lead activity',
+      text: 'Soft loading copy keeps the interface calm while future API data refreshes.',
+      accent: 'bg-cert',
+    },
+    {
+      label: 'Empty',
+      title: 'No work in this lane',
+      text: 'Empty states explain what happened and what should appear next.',
+      accent: 'bg-signal',
+    },
+    {
+      label: 'Error',
+      title: 'Connection needs attention',
+      text: 'Error states leave room for retry actions once backend services are added.',
+      accent: 'bg-coral',
+    },
+  ];
+
+  return (
+    <section className="border border-slate/10 bg-white p-6 shadow-panel lg:col-span-2" id="demo">
+      <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
+        <div>
+          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
+            Demo states
+          </p>
+          <h3 className="mt-3 font-display text-3xl font-bold leading-tight text-night">
+            The product stays useful when data is quiet, delayed, or unavailable.
+          </h3>
+          <p className="mt-4 text-sm leading-6 text-slate/70">
+            These states are intentionally simple in the frontend demo and ready to connect to
+            real API behavior later.
+          </p>
+        </div>
+
+        <div className="grid gap-px overflow-hidden border border-slate/10 bg-slate/10 md:grid-cols-3">
+          {states.map((state) => (
+            <article className="bg-cloud p-5" key={state.label}>
+              <div className={`mb-5 h-1.5 w-12 ${state.accent}`} />
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-steel">
+                {state.label}
+              </p>
+              <h4 className="mt-3 font-display text-xl font-bold leading-tight text-night">
+                {state.title}
+              </h4>
+              <p className="mt-3 text-sm font-semibold leading-6 text-slate/70">{state.text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CapabilitySection() {
   return (
     <section className="border-y border-slate/10 bg-white py-16" id="platform">
@@ -1675,7 +1745,7 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Stage 6 public lead intake workflow.</p>
+        <p>Portfolio demo concept. Stage 7 polish and responsive QA.</p>
       </div>
     </footer>
   );

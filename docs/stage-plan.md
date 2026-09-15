@@ -106,6 +106,8 @@ Build:
 - Accessibility pass.
 - README case study.
 - Screenshots.
+- Responsive dashboard columns for tablet and desktop.
+- Portfolio-ready feature and demo-flow documentation.
 
 Commit checkpoint:
 - `style: polish certaops demo`
