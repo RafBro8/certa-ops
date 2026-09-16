@@ -122,10 +122,10 @@ Suggested project name:
 certaops-demo
 ```
 
-After deployment, add the live URL here:
+Live demo:
 
 ```text
-Live demo: pending
+https://certa-ops-sigma.vercel.app/
 ```
 
 Suggested custom domain, if used:
