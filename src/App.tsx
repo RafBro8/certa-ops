@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 type LeadStatus = 'New lead' | 'Needs quote' | 'Scheduled' | 'Follow-up';
 type LeadPriority = 'High' | 'Medium' | 'Low';
@@ -34,6 +34,11 @@ type Lead = {
 type Activity = {
   detail: string;
   time: string;
+};
+
+type WorkflowFeedback = {
+  leadId: number;
+  message: string;
 };
 
 type IntakeForm = {
@@ -416,6 +421,17 @@ function DashboardPreview() {
   const [leadActivities, setLeadActivities] = useState(initialLeadActivities);
   const [noteDraft, setNoteDraft] = useState('');
   const [submittedLeadId, setSubmittedLeadId] = useState<number | null>(null);
+  const [workflowFeedback, setWorkflowFeedback] = useState<WorkflowFeedback | null>(null);
+
+  useEffect(() => {
+    if (!workflowFeedback) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setWorkflowFeedback(null), 6000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [workflowFeedback]);
 
   const filteredLeads = useMemo(
     () =>
@@ -449,6 +465,12 @@ function DashboardPreview() {
   ];
 
   function handleStatusChange(leadId: number, status: LeadStatus) {
+    const lead = leadItems.find((item) => item.id === leadId);
+
+    if (!lead || lead.status === status) {
+      return;
+    }
+
     setLeadItems((current) =>
       current.map((lead) =>
         lead.id === leadId
@@ -468,6 +490,10 @@ function DashboardPreview() {
       ],
     }));
     setSelectedLeadId(leadId);
+    setWorkflowFeedback({
+      leadId,
+      message: `${lead.customer} moved to ${status}.`,
+    });
   }
 
   function handleQuoteChange(leadId: number, value: number, quoteStatus: QuoteStatus) {
@@ -494,6 +520,8 @@ function DashboardPreview() {
   }
 
   function handleScheduleLead(leadId: number) {
+    const lead = leadItems.find((item) => item.id === leadId);
+
     setLeadItems((current) =>
       current.map((lead) =>
         lead.id === leadId
@@ -519,6 +547,21 @@ function DashboardPreview() {
       ],
     }));
     setSelectedLeadId(leadId);
+    setWorkflowFeedback({
+      leadId,
+      message: `${lead?.customer || 'Lead'} converted to a scheduled job.`,
+    });
+  }
+
+  function handleViewInPipeline(leadId: number) {
+    const leadCard = document.getElementById(`lead-card-${leadId}`);
+
+    if (!leadCard) {
+      return;
+    }
+
+    leadCard.focus({ preventScroll: true });
+    leadCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function handleFollowUpSent(leadId: number) {
@@ -729,6 +772,7 @@ function DashboardPreview() {
 
           <LeadDetailPanel
             activities={leadActivities[selectedLead.id] || []}
+            feedback={workflowFeedback?.leadId === selectedLead.id ? workflowFeedback : null}
             lead={selectedLead}
             noteDraft={noteDraft}
             onAddNote={handleAddNote}
@@ -739,6 +783,7 @@ function DashboardPreview() {
             onReviewRequest={handleReviewRequest}
             onScheduleLead={handleScheduleLead}
             onStatusChange={handleStatusChange}
+            onViewInPipeline={handleViewInPipeline}
           />
 
           <ScheduleBoard leads={leadItems} />
@@ -977,7 +1022,7 @@ function FilterPanel({
           <h3 className="mt-3 font-display text-2xl font-bold text-night">Find the next move.</h3>
         </div>
         <button
-          className="border border-slate/10 px-3 py-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate transition hover:border-cert hover:text-cert"
+          className="min-h-11 border border-slate/10 px-3 py-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate transition hover:border-cert hover:text-cert"
           onClick={() => {
             setSearchTerm('');
             setPriorityFilter('All');
@@ -1146,6 +1191,7 @@ function LeadCard({
       className={`group border p-4 text-left transition hover:border-signal/60 hover:bg-white/[0.08] ${
         active ? 'border-signal bg-white/10 shadow-glow' : 'border-white/10 bg-white/[0.06]'
       }`}
+      id={`lead-card-${lead.id}`}
       onClick={() => onSelect(lead.id)}
       type="button"
     >
@@ -1184,6 +1230,7 @@ function LeadCard({
 
 function LeadDetailPanel({
   activities: leadActivity,
+  feedback,
   lead,
   noteDraft,
   onAddNote,
@@ -1194,8 +1241,10 @@ function LeadDetailPanel({
   onReviewRequest,
   onScheduleLead,
   onStatusChange,
+  onViewInPipeline,
 }: {
   activities: Activity[];
+  feedback: WorkflowFeedback | null;
   lead: Lead;
   noteDraft: string;
   onAddNote: () => void;
@@ -1206,6 +1255,7 @@ function LeadDetailPanel({
   onReviewRequest: (leadId: number) => void;
   onScheduleLead: (leadId: number) => void;
   onStatusChange: (leadId: number, status: LeadStatus) => void;
+  onViewInPipeline: (leadId: number) => void;
 }) {
   return (
     <section className="overflow-hidden border border-slate/10 bg-white shadow-panel lg:col-span-2">
@@ -1221,11 +1271,19 @@ function LeadDetailPanel({
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:min-w-72">
-            <div className="border border-white/10 bg-white/[0.06] p-4">
+            <div
+              className={`border p-4 transition duration-300 ${
+                feedback
+                  ? 'border-signal bg-signal/15 shadow-[inset_4px_0_0_#109b8b]'
+                  : 'border-white/10 bg-white/[0.06]'
+              }`}
+            >
               <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
                 Current status
               </p>
-              <p className="mt-2 text-lg font-bold text-white">{lead.status}</p>
+              <p className={`mt-2 text-lg font-bold ${feedback ? 'text-signal' : 'text-white'}`}>
+                {lead.status}
+              </p>
             </div>
             <div className="border border-white/10 bg-white/[0.06] p-4">
               <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
@@ -1324,11 +1382,13 @@ function LeadDetailPanel({
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {pipelineStatuses.map((status) => (
                 <button
+                  aria-pressed={lead.status === status}
                   className={`min-h-14 border px-4 py-3 text-left text-sm font-extrabold transition ${
                     lead.status === status
                       ? 'border-cert bg-cert text-white'
                       : 'border-slate/10 bg-white text-slate hover:border-cert hover:text-cert'
                   }`}
+                  disabled={lead.status === status}
                   key={status}
                   onClick={() => onStatusChange(lead.id, status)}
                   type="button"
@@ -1337,6 +1397,22 @@ function LeadDetailPanel({
                 </button>
               ))}
             </div>
+            {feedback ? (
+              <div
+                aria-live="polite"
+                className="mt-4 flex flex-col gap-3 border border-signal/30 bg-signal/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+                role="status"
+              >
+                <p className="text-sm font-bold leading-6 text-night">{feedback.message}</p>
+                <button
+                  className="min-h-11 shrink-0 border border-signal/40 bg-white px-4 py-2 text-sm font-extrabold text-night transition hover:border-signal hover:text-signal"
+                  onClick={() => onViewInPipeline(lead.id)}
+                  type="button"
+                >
+                  View in pipeline
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="border border-mist bg-cloud p-5">
@@ -1448,7 +1524,7 @@ function FilterButton({
 }) {
   return (
     <button
-      className={`border px-3 py-2 text-sm font-extrabold transition ${
+      className={`min-h-11 border px-3 py-2 text-sm font-extrabold transition ${
         active
           ? 'border-cert bg-cert text-white'
           : 'border-slate/10 bg-cloud text-slate hover:border-cert hover:text-cert'

@@ -143,3 +143,18 @@ Build:
 
 Commit checkpoint:
 - `style: refine certaops visual system`
+
+## Stage 9.1: Interaction Feedback Improvement
+
+Goal: make workflow changes clear without pulling users away from lead detail.
+
+Build:
+- Inline status-change confirmation beside the workflow controls.
+- Temporary emphasis on the current-status summary.
+- Optional jump to the moved card in the live pipeline.
+- Focus management for the destination lead card.
+- Disabled active-status control to prevent duplicate activity entries.
+- Larger mobile touch targets for compact dashboard filters.
+
+Commit checkpoint:
+- `feat: improve workflow feedback`

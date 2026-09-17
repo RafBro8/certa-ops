@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 9: visual system audit and polish.
+Stage 9.1: interaction feedback improvement.
 
 ## Brand Direction
 
@@ -67,6 +67,9 @@ Positioning:
 - Refined operational palette with a warmer neutral workspace canvas.
 - Clearer surface hierarchy, quieter shadows, and consistent control states.
 - Improved mobile navigation, anchor positioning, and reduced-motion support.
+- In-context status confirmations with current-status emphasis.
+- Optional pipeline jump and focus after moving a lead.
+- Protected active status and improved mobile filter touch targets.
 - README and staged build plan.
 
 ## Case Study
