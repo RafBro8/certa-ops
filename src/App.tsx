@@ -1346,10 +1346,10 @@ function LeadDetailPanel({
                     value={lead.value}
                   />
                 </label>
-                <div className="grid gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2">
                   {quoteStatuses.map((status) => (
                     <button
-                      className={`min-h-12 border px-3 py-2 text-sm font-extrabold transition ${
+                      className={`min-h-12 border px-3 py-2 text-center text-sm font-extrabold transition ${
                         lead.quoteStatus === status
                           ? 'border-signal bg-signal text-night'
                           : 'border-white/10 bg-white/[0.06] text-white/70 hover:border-signal hover:text-white'
