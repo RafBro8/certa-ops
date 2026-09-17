@@ -1,4 +1,11 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 type LeadStatus = 'New lead' | 'Needs quote' | 'Scheduled' | 'Follow-up';
 type LeadPriority = 'High' | 'Medium' | 'Low';
@@ -318,11 +325,13 @@ const capabilities = [
 ];
 
 function App() {
+  const [leadItems, setLeadItems] = useState<Lead[]>(initialLeads);
+
   return (
     <main className="min-h-screen bg-cloud">
       <Header />
-      <Hero />
-      <DashboardPreview />
+      <Hero leads={leadItems} />
+      <DashboardPreview leadItems={leadItems} setLeadItems={setLeadItems} />
       <CapabilitySection />
       <Footer />
     </main>
@@ -367,11 +376,12 @@ function Header() {
   );
 }
 
-function Hero() {
+function Hero({ leads }: { leads: Lead[] }) {
+  const activeLeads = leads.filter((lead) => lead.lostReason === 'None');
   const heroMetrics = [
-    [String(initialLeads.length), 'open opportunities'],
-    [formatCurrency(sumLeadValue(initialLeads)), 'estimated pipeline'],
-    [String(initialLeads.filter((lead) => lead.status === 'Follow-up').length), 'follow-ups due'],
+    [String(activeLeads.length), 'open opportunities'],
+    [formatCurrency(sumLeadValue(activeLeads)), 'estimated pipeline'],
+    [String(activeLeads.filter((lead) => lead.followUpStatus === 'Due today').length), 'follow-ups due'],
     ['91%', 'response target'],
   ];
 
@@ -412,14 +422,20 @@ function Hero() {
   );
 }
 
-function DashboardPreview() {
-  const [leadItems, setLeadItems] = useState<Lead[]>(initialLeads);
+function DashboardPreview({
+  leadItems,
+  setLeadItems,
+}: {
+  leadItems: Lead[];
+  setLeadItems: Dispatch<SetStateAction<Lead[]>>;
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('All');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('All');
   const [selectedLeadId, setSelectedLeadId] = useState(initialLeads[0].id);
   const [leadActivities, setLeadActivities] = useState(initialLeadActivities);
   const [noteDraft, setNoteDraft] = useState('');
+  const [quoteDraft, setQuoteDraft] = useState(String(initialLeads[0].value));
   const [submittedLeadId, setSubmittedLeadId] = useState<number | null>(null);
   const [workflowFeedback, setWorkflowFeedback] = useState<WorkflowFeedback | null>(null);
 
@@ -433,9 +449,14 @@ function DashboardPreview() {
     return () => window.clearTimeout(timeoutId);
   }, [workflowFeedback]);
 
+  const activeLeads = useMemo(
+    () => leadItems.filter((lead) => lead.lostReason === 'None'),
+    [leadItems],
+  );
+
   const filteredLeads = useMemo(
     () =>
-      leadItems.filter((lead) => {
+      activeLeads.filter((lead) => {
         const searchTarget = `${lead.customer} ${lead.service} ${lead.area} ${lead.contact}`.toLowerCase();
         const matchesSearch = searchTarget.includes(searchTerm.trim().toLowerCase());
         const matchesPriority = priorityFilter === 'All' || lead.priority === priorityFilter;
@@ -443,11 +464,25 @@ function DashboardPreview() {
 
         return matchesSearch && matchesPriority && matchesSource;
       }),
-    [leadItems, priorityFilter, searchTerm, sourceFilter],
+    [activeLeads, priorityFilter, searchTerm, sourceFilter],
   );
 
   const selectedLead =
-    leadItems.find((lead) => lead.id === selectedLeadId) || filteredLeads[0] || leadItems[0];
+    filteredLeads.find((lead) => lead.id === selectedLeadId) || filteredLeads[0] || null;
+
+  useEffect(() => {
+    if (filteredLeads.length === 0 || filteredLeads.some((lead) => lead.id === selectedLeadId)) {
+      return;
+    }
+
+    setSelectedLeadId(filteredLeads[0].id);
+    setNoteDraft('');
+    setWorkflowFeedback(null);
+  }, [filteredLeads, selectedLeadId]);
+
+  useEffect(() => {
+    setQuoteDraft(selectedLead ? String(selectedLead.value) : '');
+  }, [selectedLead]);
 
   const dashboardMetrics = [
     { label: 'Visible leads', value: String(filteredLeads.length), tone: 'cert' },
@@ -496,14 +531,21 @@ function DashboardPreview() {
     });
   }
 
-  function handleQuoteChange(leadId: number, value: number, quoteStatus: QuoteStatus) {
+  function handleQuoteSave(leadId: number, value: number, quoteStatus: QuoteStatus) {
+    const lead = leadItems.find((item) => item.id === leadId);
+    const normalizedValue = Math.max(0, Number.isFinite(value) ? value : 0);
+
+    if (!lead || (lead.value === normalizedValue && lead.quoteStatus === quoteStatus)) {
+      return;
+    }
+
     setLeadItems((current) =>
       current.map((lead) =>
         lead.id === leadId
           ? {
               ...lead,
               quoteStatus,
-              value,
+              value: normalizedValue,
               nextAction: getNextActionForQuoteStatus(quoteStatus),
             }
           : lead,
@@ -512,7 +554,7 @@ function DashboardPreview() {
     setLeadActivities((current) => ({
       ...current,
       [leadId]: [
-        { time: 'Now', detail: `Quote updated to ${formatCurrency(value)} and marked ${quoteStatus}.` },
+        { time: 'Now', detail: `Quote saved at ${formatCurrency(normalizedValue)} and marked ${quoteStatus}.` },
         ...(current[leadId] || []),
       ],
     }));
@@ -521,6 +563,10 @@ function DashboardPreview() {
 
   function handleScheduleLead(leadId: number) {
     const lead = leadItems.find((item) => item.id === leadId);
+
+    if (!lead || (lead.status === 'Scheduled' && lead.quoteStatus === 'Approved')) {
+      return;
+    }
 
     setLeadItems((current) =>
       current.map((lead) =>
@@ -565,6 +611,12 @@ function DashboardPreview() {
   }
 
   function handleFollowUpSent(leadId: number) {
+    const lead = leadItems.find((item) => item.id === leadId);
+
+    if (!lead || lead.followUpStatus === 'Sent') {
+      return;
+    }
+
     setLeadItems((current) =>
       current.map((lead) =>
         lead.id === leadId
@@ -588,6 +640,12 @@ function DashboardPreview() {
   }
 
   function handleReviewRequest(leadId: number) {
+    const lead = leadItems.find((item) => item.id === leadId);
+
+    if (!lead || lead.reviewStatus === 'Sent' || lead.reviewStatus === 'Received') {
+      return;
+    }
+
     setLeadItems((current) =>
       current.map((lead) =>
         lead.id === leadId
@@ -646,7 +704,7 @@ function DashboardPreview() {
   function handleAddNote() {
     const trimmedNote = noteDraft.trim();
 
-    if (!trimmedNote) {
+    if (!selectedLead || !trimmedNote) {
       return;
     }
 
@@ -763,30 +821,36 @@ function DashboardPreview() {
                   key={status}
                   leads={filteredLeads.filter((lead) => lead.status === status)}
                   onLeadSelect={setSelectedLeadId}
-                  selectedLeadId={selectedLead.id}
+                  selectedLeadId={selectedLead?.id ?? -1}
                   status={status}
                 />
               ))}
             </div>
           </section>
 
-          <LeadDetailPanel
-            activities={leadActivities[selectedLead.id] || []}
-            feedback={workflowFeedback?.leadId === selectedLead.id ? workflowFeedback : null}
-            lead={selectedLead}
-            noteDraft={noteDraft}
-            onAddNote={handleAddNote}
-            onFollowUpSent={handleFollowUpSent}
-            onLostReasonChange={handleLostReasonChange}
-            onNoteChange={setNoteDraft}
-            onQuoteChange={handleQuoteChange}
-            onReviewRequest={handleReviewRequest}
-            onScheduleLead={handleScheduleLead}
-            onStatusChange={handleStatusChange}
-            onViewInPipeline={handleViewInPipeline}
-          />
+          {selectedLead ? (
+            <LeadDetailPanel
+              activities={leadActivities[selectedLead.id] || []}
+              feedback={workflowFeedback?.leadId === selectedLead.id ? workflowFeedback : null}
+              lead={selectedLead}
+              noteDraft={noteDraft}
+              onAddNote={handleAddNote}
+              onFollowUpSent={handleFollowUpSent}
+              onLostReasonChange={handleLostReasonChange}
+              onNoteChange={setNoteDraft}
+              onQuoteDraftChange={setQuoteDraft}
+              onQuoteSave={handleQuoteSave}
+              onReviewRequest={handleReviewRequest}
+              onScheduleLead={handleScheduleLead}
+              onStatusChange={handleStatusChange}
+              onViewInPipeline={handleViewInPipeline}
+              quoteDraft={quoteDraft}
+            />
+          ) : (
+            <EmptyLeadDetail />
+          )}
 
-          <ScheduleBoard leads={leadItems} />
+          <ScheduleBoard leads={activeLeads} />
           <FollowUpBoard
             leads={leadItems}
             onFollowUpSent={handleFollowUpSent}
@@ -887,6 +951,7 @@ function LeadIntakeSection({
                 <label className="grid gap-2 text-sm font-bold text-slate">
                   Service type
                   <select
+                    aria-label="Service type"
                     className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
                     onChange={(event) => updateField('serviceType', event.target.value)}
                     value={form.serviceType}
@@ -1061,6 +1126,7 @@ function FilterPanel({
       <label className="mt-6 grid gap-2 text-sm font-bold text-slate">
         Lead source
         <select
+          aria-label="Lead source"
           className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
           onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
           value={sourceFilter}
@@ -1237,11 +1303,13 @@ function LeadDetailPanel({
   onFollowUpSent,
   onLostReasonChange,
   onNoteChange,
-  onQuoteChange,
+  onQuoteDraftChange,
+  onQuoteSave,
   onReviewRequest,
   onScheduleLead,
   onStatusChange,
   onViewInPipeline,
+  quoteDraft,
 }: {
   activities: Activity[];
   feedback: WorkflowFeedback | null;
@@ -1251,12 +1319,21 @@ function LeadDetailPanel({
   onFollowUpSent: (leadId: number) => void;
   onLostReasonChange: (leadId: number, lostReason: LostReason) => void;
   onNoteChange: (value: string) => void;
-  onQuoteChange: (leadId: number, value: number, quoteStatus: QuoteStatus) => void;
+  onQuoteDraftChange: (value: string) => void;
+  onQuoteSave: (leadId: number, value: number, quoteStatus: QuoteStatus) => void;
   onReviewRequest: (leadId: number) => void;
   onScheduleLead: (leadId: number) => void;
   onStatusChange: (leadId: number, status: LeadStatus) => void;
   onViewInPipeline: (leadId: number) => void;
+  quoteDraft: string;
 }) {
+  const quoteValue = Number(quoteDraft);
+  const quoteIsValid = quoteDraft.trim() !== '' && Number.isFinite(quoteValue) && quoteValue >= 0;
+  const quoteHasChanges = quoteIsValid && quoteValue !== lead.value;
+  const isScheduled = lead.status === 'Scheduled' && lead.quoteStatus === 'Approved';
+  const followUpSent = lead.followUpStatus === 'Sent';
+  const reviewSent = lead.reviewStatus === 'Sent' || lead.reviewStatus === 'Received';
+
   return (
     <section className="overflow-hidden border border-slate/10 bg-white shadow-panel lg:col-span-2">
       <div className="bg-night p-6 text-white">
@@ -1337,13 +1414,12 @@ function LeadDetailPanel({
                 <label className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
                   Estimated quote
                   <input
+                    aria-invalid={!quoteIsValid}
                     className="mt-2 w-full border border-white/20 bg-white px-4 py-3 text-lg font-extrabold text-night outline-none transition hover:border-signal/70 focus:border-signal"
                     min="0"
-                    onChange={(event) =>
-                      onQuoteChange(lead.id, Number(event.target.value || 0), lead.quoteStatus)
-                    }
+                    onChange={(event) => onQuoteDraftChange(event.target.value)}
                     type="number"
-                    value={lead.value}
+                    value={quoteDraft}
                   />
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1354,21 +1430,33 @@ function LeadDetailPanel({
                           ? 'border-signal bg-signal text-night'
                           : 'border-white/10 bg-white/[0.06] text-white/70 hover:border-signal hover:text-white'
                       }`}
+                      disabled={!quoteIsValid || (lead.quoteStatus === status && !quoteHasChanges)}
                       key={status}
-                      onClick={() => onQuoteChange(lead.id, lead.value, status)}
+                      onClick={() => onQuoteSave(lead.id, quoteValue, status)}
                       type="button"
                     >
                       {status}
                     </button>
                   ))}
                 </div>
-                <button
-                  className="bg-white px-5 py-3 text-sm font-extrabold text-night transition hover:bg-signal"
-                  onClick={() => onScheduleLead(lead.id)}
-                  type="button"
-                >
-                  Convert to scheduled job
-                </button>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    className="border border-white/20 bg-white/[0.06] px-5 py-3 text-sm font-extrabold text-white transition hover:border-signal hover:text-signal disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={!quoteHasChanges}
+                    onClick={() => onQuoteSave(lead.id, quoteValue, lead.quoteStatus)}
+                    type="button"
+                  >
+                    Save quote
+                  </button>
+                  <button
+                    className="bg-white px-5 py-3 text-sm font-extrabold text-night transition hover:bg-signal disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={isScheduled}
+                    onClick={() => onScheduleLead(lead.id)}
+                    type="button"
+                  >
+                    {isScheduled ? 'Scheduled' : 'Convert to scheduled job'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1426,22 +1514,25 @@ function LeadDetailPanel({
             </div>
             <div className="mt-4 grid gap-3">
               <button
-                className="border border-slate/10 bg-white px-4 py-3 text-left text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert"
+                className="border border-slate/10 bg-white px-4 py-3 text-left text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={followUpSent}
                 onClick={() => onFollowUpSent(lead.id)}
                 type="button"
               >
-                Mark follow-up sent
+                {followUpSent ? 'Follow-up sent' : 'Mark follow-up sent'}
               </button>
               <button
-                className="border border-slate/10 bg-white px-4 py-3 text-left text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert"
+                className="border border-slate/10 bg-white px-4 py-3 text-left text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={reviewSent}
                 onClick={() => onReviewRequest(lead.id)}
                 type="button"
               >
-                Send review request
+                {reviewSent ? 'Review request sent' : 'Send review request'}
               </button>
               <label className="grid gap-2 text-sm font-bold text-slate">
                 Lost reason
                 <select
+                  aria-label="Lost reason"
                   className="h-12 border border-mist bg-white px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert"
                   onChange={(event) =>
                     onLostReasonChange(lead.id, event.target.value as LostReason)
@@ -1457,17 +1548,22 @@ function LeadDetailPanel({
           </div>
 
           <div className="border border-mist bg-cloud p-5">
-            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-cert">
+            <label
+              className="text-sm font-extrabold uppercase tracking-[0.16em] text-cert"
+              htmlFor={`activity-note-${lead.id}`}
+            >
               Add note
-            </p>
+            </label>
             <textarea
+              id={`activity-note-${lead.id}`}
               className="mt-4 min-h-24 w-full border border-mist bg-white px-3 py-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert"
               onChange={(event) => onNoteChange(event.target.value)}
               placeholder="Log a call, quote update, scheduling note..."
               value={noteDraft}
             />
             <button
-              className="mt-3 w-full bg-night px-5 py-3 text-sm font-extrabold text-white transition hover:bg-cert sm:w-auto"
+              className="mt-3 w-full bg-night px-5 py-3 text-sm font-extrabold text-white transition hover:bg-cert disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              disabled={!noteDraft.trim()}
               onClick={onAddNote}
               type="button"
             >
@@ -1502,6 +1598,22 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-steel">{label}</p>
       <p className="mt-2 break-words text-sm font-bold leading-6 text-night">{value}</p>
     </div>
+  );
+}
+
+function EmptyLeadDetail() {
+  return (
+    <section className="border border-dashed border-slate/20 bg-white p-8 shadow-sm lg:col-span-2">
+      <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
+        Lead detail
+      </p>
+      <h3 className="mt-3 font-display text-3xl font-bold text-night">
+        No active leads match these filters.
+      </h3>
+      <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate/70">
+        Reset or adjust the dashboard controls to select another active opportunity.
+      </p>
+    </section>
   );
 }
 
@@ -1627,8 +1739,9 @@ function FollowUpBoard({
   onLeadSelect: (leadId: number) => void;
   onReviewRequest: (leadId: number) => void;
 }) {
-  const reviewQueue = leads.filter((lead) => lead.reviewStatus === 'Queued');
-  const followUpsDue = leads.filter((lead) => lead.followUpStatus === 'Due today');
+  const activeLeads = leads.filter((lead) => lead.lostReason === 'None');
+  const reviewQueue = activeLeads.filter((lead) => lead.reviewStatus === 'Queued');
+  const followUpsDue = activeLeads.filter((lead) => lead.followUpStatus === 'Due today');
   const lostLeads = leads.filter((lead) => lead.lostReason !== 'None');
   const closeoutItems = [...followUpsDue, ...reviewQueue].filter(
     (lead, index, items) => items.findIndex((item) => item.id === lead.id) === index,
@@ -1683,18 +1796,22 @@ function FollowUpBoard({
 
                 <div className="grid gap-2 sm:grid-cols-2 xl:min-w-72">
                   <button
-                    className="bg-night px-4 py-3 text-sm font-extrabold text-white transition hover:bg-cert"
+                    className="bg-night px-4 py-3 text-sm font-extrabold text-white transition hover:bg-cert disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={lead.followUpStatus === 'Sent'}
                     onClick={() => onFollowUpSent(lead.id)}
                     type="button"
                   >
-                    Mark sent
+                    {lead.followUpStatus === 'Sent' ? 'Sent' : 'Mark sent'}
                   </button>
                   <button
-                    className="border border-slate/10 bg-white px-4 py-3 text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert"
+                    className="border border-slate/10 bg-white px-4 py-3 text-sm font-extrabold text-slate transition hover:border-cert hover:text-cert disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={lead.reviewStatus === 'Sent' || lead.reviewStatus === 'Received'}
                     onClick={() => onReviewRequest(lead.id)}
                     type="button"
                   >
-                    Send review
+                    {lead.reviewStatus === 'Sent' || lead.reviewStatus === 'Received'
+                      ? 'Review sent'
+                      : 'Send review'}
                   </button>
                 </div>
               </article>

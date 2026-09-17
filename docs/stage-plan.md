@@ -158,3 +158,20 @@ Build:
 
 Commit checkpoint:
 - `feat: improve workflow feedback`
+
+## Stage 9.2: Workflow Reliability and Consistency
+
+Goal: make every demo workflow predictable, synchronized, and safe to repeat.
+
+Build:
+- Shared lead state for live hero and dashboard metrics.
+- Filter-aware lead selection and no-results detail treatment.
+- Lost opportunities excluded from the active pipeline and retained in closeout reporting.
+- Explicit quote draft and save workflow.
+- Duplicate-action protection for scheduling, follow-up, and review controls.
+- Clear disabled states for completed and unavailable actions.
+- Narrow-screen overflow correction and stronger form labels.
+- Canonical production URL metadata.
+
+Commit checkpoint:
+- `fix: harden certaops workflows`

@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 9.1: interaction feedback improvement.
+Stage 9.2: workflow reliability and consistency.
 
 ## Brand Direction
 
@@ -70,6 +70,11 @@ Positioning:
 - In-context status confirmations with current-status emphasis.
 - Optional pipeline jump and focus after moving a lead.
 - Protected active status and improved mobile filter touch targets.
+- Shared live metrics across the hero and dashboard.
+- Filter-aware lead selection and a purposeful no-results detail state.
+- Explicit quote saving with duplicate workflow-action protection.
+- Lost opportunities removed from the active pipeline while remaining in closeout reporting.
+- Narrow-screen overflow, form labeling, and canonical URL improvements.
 - README and staged build plan.
 
 ## Case Study
