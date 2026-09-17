@@ -314,7 +314,7 @@ const capabilities = [
 
 function App() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-cloud">
       <Header />
       <Hero />
       <DashboardPreview />
@@ -326,8 +326,8 @@ function App() {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-20 border-b border-slate/10 bg-cloud/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
+    <header className="sticky top-0 z-20 border-b border-slate/10 bg-cloud/95 shadow-[0_1px_12px_rgba(16,24,38,0.05)] backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
         <a className="flex items-center gap-3" href="#top" aria-label="CertaOps home">
           <span className="grid h-10 w-10 place-items-center bg-night text-sm font-black text-white">
             CO
@@ -340,7 +340,7 @@ function Header() {
           </span>
         </a>
 
-        <nav className="flex gap-2 overflow-x-auto pb-1 text-sm font-bold text-slate/70 sm:flex-wrap sm:overflow-visible sm:pb-0" aria-label="Primary">
+        <nav className="flex flex-wrap gap-1 text-xs font-bold text-slate/70 sm:text-sm" aria-label="Primary">
           {[
             ['Platform', '#platform'],
             ['Request', '#intake'],
@@ -349,7 +349,7 @@ function Header() {
             ['Demo', '#demo'],
           ].map(([item, href]) => (
             <a
-              className="shrink-0 border border-slate/10 bg-white px-4 py-2 transition hover:border-cert hover:text-cert"
+              className="border border-transparent px-2.5 py-2 text-center transition hover:border-slate/10 hover:bg-white hover:text-cert sm:px-3"
               href={href}
               key={item}
             >
@@ -371,14 +371,13 @@ function Hero() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-night" id="top">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(20,184,166,0.18),transparent_26rem),radial-gradient(circle_at_82%_22%,rgba(37,99,235,0.2),transparent_30rem)]" />
-      <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end lg:py-20">
+    <section className="relative overflow-hidden border-b-4 border-signal bg-night" id="top">
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:py-20">
         <div className="text-white">
           <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-signal">
             CertaOps
           </p>
-          <h1 className="mt-5 max-w-3xl font-display text-5xl font-bold leading-tight sm:text-7xl">
+          <h1 className="mt-5 max-w-3xl font-display text-5xl font-bold leading-[1.08] sm:text-6xl lg:text-7xl">
             From first lead to finished job.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">
@@ -386,7 +385,7 @@ function Hero() {
             one place to manage leads, quotes, scheduled work, and follow-ups.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a className="bg-signal px-6 py-3 text-center text-sm font-extrabold text-night transition hover:bg-white" href="#intake">
+            <a className="bg-signal px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-white hover:text-night" href="#intake">
               Try intake flow
             </a>
             <a className="border border-white/20 bg-white/10 px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-white hover:text-night" href="#dashboard">
@@ -395,9 +394,9 @@ function Hero() {
           </div>
         </div>
 
-        <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 shadow-glow sm:grid-cols-2">
+        <div className="grid gap-px overflow-hidden border border-white/15 bg-white/10 shadow-glow sm:grid-cols-2">
           {heroMetrics.map(([stat, label]) => (
-            <div className="bg-night p-6 text-white" key={label}>
+            <div className="bg-[#151f30] p-6 text-white" key={label}>
               <p className="font-display text-4xl font-bold text-white">{stat}</p>
               <p className="mt-1 text-sm font-semibold text-white/60">{label}</p>
             </div>
@@ -668,8 +667,8 @@ function DashboardPreview() {
         onLeadCreate={handleIntakeSubmit}
         submittedLead={leadItems.find((lead) => lead.id === submittedLeadId) || null}
       />
-      <section className="py-16" id="dashboard">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <section className="border-b border-slate/10 py-16" id="dashboard">
+        <div className="mx-auto max-w-[1440px] px-5 sm:px-8">
         <div className="mb-8 grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
           <div>
             <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
@@ -680,12 +679,12 @@ function DashboardPreview() {
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-slate/70">
-            Stage 7 gives the demo a more polished portfolio finish with tighter states,
-            responsive dashboard behavior, and clearer product storytelling.
+            A focused view of active opportunities, next actions, quote momentum, and work that
+            needs attention today.
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
           <aside className="grid gap-5">
             <FilterPanel
               priorityFilter={priorityFilter}
@@ -791,7 +790,7 @@ function LeadIntakeSection({
   }
 
   return (
-    <section className="border-b border-slate/10 bg-white py-16" id="intake">
+    <section className="border-b border-slate/10 bg-[#fafbfc] py-16" id="intake">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
           <div>
@@ -814,13 +813,13 @@ function LeadIntakeSection({
           </div>
 
           <div className="grid gap-5">
-            <form className="border border-slate/10 bg-cloud p-6 shadow-panel" noValidate onSubmit={handleSubmit}>
+            <form className="border border-slate/10 bg-white p-6 shadow-panel" noValidate onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-bold text-slate">
                   Name
                   <input
                     aria-invalid={Boolean(formError && !form.name.trim())}
-                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
                     onChange={(event) => updateField('name', event.target.value)}
                     placeholder="Customer or business name"
                     required
@@ -832,7 +831,7 @@ function LeadIntakeSection({
                   Contact
                   <input
                     aria-invalid={Boolean(formError && !form.contact.trim())}
-                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
                     onChange={(event) => updateField('contact', event.target.value)}
                     placeholder="Phone or email"
                     required
@@ -843,7 +842,7 @@ function LeadIntakeSection({
                 <label className="grid gap-2 text-sm font-bold text-slate">
                   Service type
                   <select
-                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
                     onChange={(event) => updateField('serviceType', event.target.value)}
                     value={form.serviceType}
                   >
@@ -857,7 +856,7 @@ function LeadIntakeSection({
                   Location
                   <input
                     aria-invalid={Boolean(formError && !form.location.trim())}
-                    className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
                     onChange={(event) => updateField('location', event.target.value)}
                     placeholder="Town or neighborhood"
                     required
@@ -890,7 +889,7 @@ function LeadIntakeSection({
                 <label className="grid gap-2 text-sm font-bold text-slate md:col-span-2">
                   Request notes
                   <textarea
-                    className="min-h-28 border border-slate/10 bg-white px-3 py-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                    className="min-h-28 border border-mist bg-cloud px-3 py-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
                     onChange={(event) => updateField('notes', event.target.value)}
                     placeholder="Tell us what happened, what you need, and any timing constraints."
                     value={form.notes}
@@ -969,7 +968,7 @@ function FilterPanel({
   sourceFilter: SourceFilter;
 }) {
   return (
-    <section className="border border-slate/10 bg-white p-6 shadow-panel">
+    <section className="border border-mist bg-white p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
@@ -993,7 +992,7 @@ function FilterPanel({
       <label className="mt-6 grid gap-2 text-sm font-bold text-slate">
         Search leads
         <input
-          className="h-12 border border-slate/10 bg-cloud px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+          className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
           onChange={(event) => setSearchTerm(event.target.value)}
           placeholder="Customer, service, town..."
           value={searchTerm}
@@ -1017,7 +1016,7 @@ function FilterPanel({
       <label className="mt-6 grid gap-2 text-sm font-bold text-slate">
         Lead source
         <select
-          className="h-12 border border-slate/10 bg-cloud px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+          className="h-12 border border-mist bg-cloud px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert focus:bg-white"
           onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
           value={sourceFilter}
         >
@@ -1032,7 +1031,7 @@ function FilterPanel({
 
 function TodayFocus() {
   return (
-    <aside className="border border-slate/10 bg-white p-6 shadow-panel">
+    <aside className="border border-mist bg-white p-6 shadow-sm">
       <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
         Today focus
       </p>
@@ -1046,7 +1045,7 @@ function TodayFocus() {
 
       <div className="mt-6 grid gap-3">
         {activities.map((activity) => (
-          <div className="border border-mist bg-cloud p-4" key={`${activity.time}-${activity.detail}`}>
+          <div className="border-l-2 border-cert bg-cloud p-4" key={`${activity.time}-${activity.detail}`}>
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-steel">
               {activity.time}
             </p>
@@ -1144,7 +1143,7 @@ function LeadCard({
   return (
     <button
       aria-pressed={active}
-      className={`group border p-4 text-left transition hover:-translate-y-0.5 hover:border-signal/50 hover:bg-white/10 ${
+      className={`group border p-4 text-left transition hover:border-signal/60 hover:bg-white/[0.08] ${
         active ? 'border-signal bg-white/10 shadow-glow' : 'border-white/10 bg-white/[0.06]'
       }`}
       onClick={() => onSelect(lead.id)}
@@ -1280,7 +1279,7 @@ function LeadDetailPanel({
                 <label className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/50">
                   Estimated quote
                   <input
-                    className="mt-2 w-full border border-white/10 bg-white px-4 py-3 text-lg font-extrabold text-night outline-none transition focus:border-signal"
+                    className="mt-2 w-full border border-white/20 bg-white px-4 py-3 text-lg font-extrabold text-night outline-none transition hover:border-signal/70 focus:border-signal"
                     min="0"
                     onChange={(event) =>
                       onQuoteChange(lead.id, Number(event.target.value || 0), lead.quoteStatus)
@@ -1367,7 +1366,7 @@ function LeadDetailPanel({
               <label className="grid gap-2 text-sm font-bold text-slate">
                 Lost reason
                 <select
-                  className="h-12 border border-slate/10 bg-white px-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+                  className="h-12 border border-mist bg-white px-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert"
                   onChange={(event) =>
                     onLostReasonChange(lead.id, event.target.value as LostReason)
                   }
@@ -1386,7 +1385,7 @@ function LeadDetailPanel({
               Add note
             </p>
             <textarea
-              className="mt-4 min-h-24 w-full border border-slate/10 bg-white px-3 py-3 text-sm font-semibold text-night outline-none transition focus:border-cert"
+              className="mt-4 min-h-24 w-full border border-mist bg-white px-3 py-3 text-sm font-semibold text-night outline-none transition hover:border-steel/40 focus:border-cert"
               onChange={(event) => onNoteChange(event.target.value)}
               placeholder="Log a call, quote update, scheduling note..."
               value={noteDraft}
@@ -1470,7 +1469,7 @@ function ScheduleBoard({ leads }: { leads: Lead[] }) {
   );
 
   return (
-    <section className="border border-slate/10 bg-white p-6 shadow-panel lg:col-span-2">
+    <section className="border border-mist bg-white p-6 shadow-sm lg:col-span-2">
       <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
@@ -1494,7 +1493,7 @@ function ScheduleBoard({ leads }: { leads: Lead[] }) {
           {scheduledLeads.length > 0 ? (
             scheduledLeads.map((lead) => (
               <article
-                className="grid gap-4 border border-slate/10 bg-cloud p-5 md:grid-cols-[1fr_auto] md:items-center"
+                className="grid gap-4 border border-mist bg-cloud p-5 transition hover:border-steel/40 md:grid-cols-[1fr_auto] md:items-center"
                 key={lead.id}
               >
                 <div>
@@ -1580,11 +1579,11 @@ function FollowUpBoard({
           </div>
         </div>
 
-        <div className="grid gap-4 bg-white p-6 text-night">
+        <div className="grid gap-4 bg-[#fafbfc] p-6 text-night">
           {closeoutItems.length > 0 ? (
             closeoutItems.map((lead) => (
               <article
-                className="grid gap-4 border border-slate/10 bg-cloud p-5 xl:grid-cols-[1fr_auto] xl:items-center"
+                className="grid gap-4 border border-mist bg-white p-5 transition hover:border-steel/40 xl:grid-cols-[1fr_auto] xl:items-center"
                 key={lead.id}
               >
                 <button
@@ -1669,7 +1668,7 @@ function DemoStatePanel() {
   ];
 
   return (
-    <section className="border border-slate/10 bg-white p-6 shadow-panel lg:col-span-2" id="demo">
+    <section className="border border-mist bg-white p-6 shadow-sm lg:col-span-2" id="demo">
       <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-cert">
@@ -1686,7 +1685,7 @@ function DemoStatePanel() {
 
         <div className="grid gap-px overflow-hidden border border-slate/10 bg-slate/10 md:grid-cols-3">
           {states.map((state) => (
-            <article className="bg-cloud p-5" key={state.label}>
+            <article className="bg-[#fafbfc] p-5" key={state.label}>
               <div className={`mb-5 h-1.5 w-12 ${state.accent}`} />
               <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-steel">
                 {state.label}
@@ -1705,7 +1704,7 @@ function DemoStatePanel() {
 
 function CapabilitySection() {
   return (
-    <section className="border-y border-slate/10 bg-white py-16" id="platform">
+    <section className="border-y border-slate/10 bg-[#fafbfc] py-16" id="platform">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
           <div>
@@ -1725,7 +1724,7 @@ function CapabilitySection() {
 
         <div className="mt-10 grid gap-px overflow-hidden border border-slate/10 bg-slate/10 md:grid-cols-3">
           {capabilities.map((item) => (
-            <article className="bg-cloud p-7" key={item.title}>
+            <article className="bg-white p-7" key={item.title}>
               <div className="mb-7 h-2 w-16 bg-cert" />
               <h3 className="font-display text-2xl font-bold text-night">{item.title}</h3>
               <p className="mt-4 text-sm leading-6 text-slate/70">{item.text}</p>

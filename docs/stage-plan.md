@@ -127,3 +127,19 @@ Build:
 
 Commit checkpoint:
 - `chore: prepare deployment`
+
+## Stage 9: Visual System Audit and Polish
+
+Goal: strengthen the product's visual hierarchy without changing its proven workflows.
+
+Build:
+- Refined navy, blue, teal, and neutral design tokens.
+- Warmer workspace canvas with clearer surface hierarchy.
+- Quieter borders and shadows across secondary panels.
+- Consistent form, hover, focus, invalid, and selected states.
+- Wider desktop dashboard workspace and denser operational layout.
+- Mobile navigation and anchor-offset improvements.
+- Reduced-motion support and responsive overflow verification.
+
+Commit checkpoint:
+- `style: refine certaops visual system`

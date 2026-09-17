@@ -4,7 +4,7 @@ Portfolio-ready operations dashboard concept for local service businesses to tra
 
 ## Current Stage
 
-Stage 8: deployment-ready portfolio release.
+Stage 9: visual system audit and polish.
 
 ## Brand Direction
 
@@ -64,6 +64,9 @@ Positioning:
 - Portfolio-ready case study notes and screenshot references.
 - Production metadata, favicon, web manifest, and social preview card.
 - Vercel refresh fallback config for future client-side routes.
+- Refined operational palette with a warmer neutral workspace canvas.
+- Clearer surface hierarchy, quieter shadows, and consistent control states.
+- Improved mobile navigation, anchor positioning, and reduced-motion support.
 - README and staged build plan.
 
 ## Case Study
