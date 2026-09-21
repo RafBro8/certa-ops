@@ -1937,7 +1937,20 @@ function Footer() {
           <p className="font-display text-xl font-bold text-white">CertaOps</p>
           <p className="mt-1">Clear operations for local service businesses.</p>
         </div>
-        <p>Portfolio demo concept. Frontend-only product showcase.</p>
+        <div className="flex flex-col gap-1 md:items-end md:text-right">
+          <p>Demo site. Frontend-only product showcase.</p>
+          <p>
+            Designed &amp; Built by{' '}
+            <a
+              href="https://goodlookingdigital.com"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-white/80 underline-offset-2 transition-colors hover:text-white hover:underline"
+            >
+              Good Looking Digital
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );
